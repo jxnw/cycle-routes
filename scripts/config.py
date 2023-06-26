@@ -8,7 +8,11 @@ class Config:
                                                    'footway': 0.8,
                                                    'path': 0.8,
                                                    'residential': 0.7,
-                                                   'track': 0.7
+                                                   'track': 0.7,
+                                                   'tertiary': 0.3,
+                                                   'secondary': 0.2,
+                                                   'primary': 0.1,
+                                                   'service': 0.1
                                                    })
     bicycle: Tuple[float, Dict[str, float]] = (1, {'designated': 0.8,
                                                    'yes': 0.8

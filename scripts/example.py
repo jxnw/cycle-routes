@@ -49,8 +49,8 @@ def ways_to_edges(ways: List[overpy.Way]):
 
 def main():
     api = overpy.Overpass()
-    result = api.query("nwr(56.3344, -2.8153, 56.3434, -2.7836); out;")
-    # result = api.query("nwr(56.3384, -2.8037, 56.3425, -2.7883); out;")
+    result = api.query("nwr(56.3284, -2.8350, 56.3437, -2.7855); out;")  # st andrews
+    # result = api.query("nwr(56.3375, -2.8059, 56.3437, -2.7855); out;")
 
     ways = []
     for way in result.ways:
