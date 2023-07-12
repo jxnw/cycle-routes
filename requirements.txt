@@ -1,3 +1,5 @@
 igraph
 matplotlib
 overpy
+ipykernel
+networkx

@@ -1,8 +1,9 @@
-import igraph as ig
 from typing import Dict, List
-from config import Config
 import matplotlib.pyplot as plt
+import networkx as nx
 import overpy
+import numpy as np
+from scripts.config import Config
 
 
 def eval_way(way, config: Config = Config()):
@@ -56,21 +57,40 @@ def ways_to_edges(ways: List[overpy.Way]):
     return edges, list(all_nodes)
 
 
+def poly_area(x, y):
+    return 0.5 * np.abs(np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1)))
+
+
+def group_area(group, layout):
+    coordinates = [layout.get(node_id) for node_id in group]
+    south = min(coordinates, key=lambda x: x[1])
+    west = min(coordinates, key=lambda x: x[0])
+    north = max(coordinates, key=lambda x: x[1])
+    east = max(coordinates, key=lambda x: x[0])
+    bbox = [south, west, north, east]
+    return poly_area([n[0] for n in bbox], [n[1] for n in bbox])
+
+
 def main():
     api = overpy.Overpass()
     # result = api.query("nwr(56.3284, -2.8350, 56.3437, -2.7855); out;")  # st andrews
     result = api.query("nwr(56.3375, -2.8059, 56.3437, -2.7855); out;")
 
-    ways = filter_ways(result, -1)
-
+    ways = filter_ways(result, 0.1)
     edges, all_nodes = ways_to_edges(ways)
-    node_mapping = {node.id: idx for idx, node in enumerate(all_nodes)}
-    mapped_edges = [[node_mapping[edge[0]], node_mapping[edge[1]]] for edge in edges]
-    layout = [(float(node.lon), float(node.lat)) for node in all_nodes]
+    layout = {node.id: (float(node.lon), float(node.lat)) for node in all_nodes}
 
-    g = ig.Graph(n=len(all_nodes), edges=mapped_edges)
-    fig, ax = plt.subplots()
-    ig.plot(g, target=ax, layout=layout, vertex_size=0.0002, bbox=(800, 400))
+    G = nx.Graph(edges)
+
+    sorted_groups = sorted(nx.connected_components(G), key=lambda g: group_area(g, layout), reverse=True)
+
+    nx.draw_networkx(G, pos=layout, with_labels=False, node_size=5)
+    nx.draw_networkx(G.subgraph(list(sorted_groups[0])), pos=layout, node_color='r', edge_color='r', with_labels=False,
+                     node_size=5)
+    nx.draw_networkx(G.subgraph(list(sorted_groups[1])), pos=layout, node_color='m', edge_color='m', with_labels=False,
+                     node_size=5)
+    nx.draw_networkx(G.subgraph(list(sorted_groups[2])), pos=layout, node_color='g', edge_color='g', with_labels=False,
+                     node_size=5)
     plt.show()
 
 
