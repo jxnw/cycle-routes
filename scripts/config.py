@@ -35,6 +35,7 @@ class Config:
     )
 
     threshold: float = 0.15
+    neighbour_eps: float = 0.0005
 
     highway: Tuple[float, Dict[str, float]] = (1, {'cycleway': 1,
                                                    'footway': 0.8,

@@ -13,8 +13,17 @@ class Model:
         ways = self.data_fetcher.get_ways()
         filtered_ways = self.filter_ways(ways)
         edges, all_nodes = self.ways_to_edges(filtered_ways)
-        # TODO: self.connect_close_nodes
+        edges = self.connect_close_nodes(edges, all_nodes)
         return edges, all_nodes
+
+    def connect_close_nodes(self, edges, all_nodes):
+        eps = self.config.neighbour_eps
+        for centre in all_nodes:
+            for node in all_nodes:
+                if abs(float(node.lon) - float(centre.lon)) <= eps and abs(float(node.lat) - float(centre.lat)) <= eps:
+                    if node is not centre:
+                        edges.add((centre.id, node.id))
+        return edges
 
     def eval_way(self, way: overpy.Way):
         score = 0
@@ -39,13 +48,13 @@ class Model:
             for node in nodes:
                 link_counter[node.id] = link_counter.get(node.id, 0) + 1
 
-        edges = []
+        edges = set()
         all_nodes = set()
         for way in ways:
             nodes = way.get_nodes(resolve_missing=True)
             nodes = [node for node in nodes if self.node_in_area(node)]
             if len(nodes) == 2:
-                edges.append([nodes[0].id, nodes[1].id])  # add way as an edge
+                edges.add((nodes[0].id, nodes[1].id))  # add way as an edge
                 all_nodes.add(nodes[0])
                 all_nodes.add(nodes[1])
                 continue
@@ -55,7 +64,7 @@ class Model:
             for i in range(1, len(nodes)):
                 node = nodes[i]
                 if (link_counter[node.id] > 1 or node is tail) and prev.id != node.id:
-                    edges.append([prev.id, node.id])
+                    edges.add((prev.id, node.id))
                     all_nodes.add(prev)
                     all_nodes.add(node)
                     prev = node
