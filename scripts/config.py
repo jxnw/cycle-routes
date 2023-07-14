@@ -1,9 +1,41 @@
 from dataclasses import dataclass
 from typing import Dict, Tuple
 
+TAG_MAPPINGS = {
+    'cycleway:right': 'cycleway',
+    'cycleway:left': 'cycleway',
+    'cycleway:both': 'cycleway'
+}
+
+
+@dataclass
+class BoundingBox:
+    South: float
+    West: float
+    North: float
+    East: float
+
 
 @dataclass
 class Config:
+    # SMALL
+    # bounding_box: BoundingBox = BoundingBox(
+    #     South=56.3375,
+    #     West=-2.8059,
+    #     North=56.3437,
+    #     East=-2.7855
+    # )
+
+    # BIG
+    bounding_box: BoundingBox = BoundingBox(
+        South=56.3284,
+        West=-2.8350,
+        North=56.3437,
+        East=-2.7855
+    )
+
+    threshold: float = 0.15
+
     highway: Tuple[float, Dict[str, float]] = (1, {'cycleway': 1,
                                                    'footway': 0.8,
                                                    'path': 0.8,
@@ -20,6 +52,7 @@ class Config:
     bicycle_road: Tuple[float, Dict[str, float]] = (1, {'yes': 1})
     cycleway: Tuple[float, Dict[str, float]] = (1, {'track': 1,
                                                     'lane': 0.8,
+                                                    'shared_lane': 0.6,
                                                     'share_busway': 0.6,
                                                     'opposite_share_busway': 0.6
                                                     })
@@ -37,6 +70,8 @@ class Config:
     foot: Tuple[float, Dict[str, float]] = (0.6, {'designated': 0.8})
 
     def __getitem__(self, item):
+        if item in TAG_MAPPINGS.keys():
+            item = TAG_MAPPINGS[item]
         return getattr(self, item, (0, {}))
 
     def weight_sum(self):
