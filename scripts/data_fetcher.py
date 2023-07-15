@@ -6,7 +6,7 @@ class DataFetcher:
     api = overpy.Overpass()
 
     def __init__(self, box: BoundingBox):
-        self.result = self.api.query(f"way({box.South}, {box.West}, {box.North}, {box.East}); out;")
+        self.result = self.api.query(f"nwr({box.South}, {box.West}, {box.North}, {box.East}); out;")
         self.centre = self.api.query(f"node({box.Node_id}); out;")
 
     def get_ways(self):

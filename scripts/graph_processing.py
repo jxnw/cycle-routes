@@ -24,9 +24,10 @@ class GraphProcessing:
     def __init__(self, config: Config):
         self.config = config
         self.model = Model(config)
-        self.edges, self.all_nodes = self.model.get_graph()
-        self.layout = {node.id: (float(node.lon), float(node.lat)) for node in self.all_nodes}
-        self.graph = nx.Graph(self.edges)
+        self.dol, self.nodes = self.model.get_graph()
+        self.graph = nx.Graph(self.dol)
+        self.edges = set(self.graph.edges)
+        self.layout = {node.id: (float(node.lon), float(node.lat)) for node in self.nodes}
         for node_name in self.graph.nodes:
             self.graph.nodes[node_name]['pos'] = self.layout[node_name]
 
