@@ -9,34 +9,7 @@ TAG_MAPPINGS = {
 
 
 @dataclass
-class BoundingBox:
-    South: float
-    West: float
-    North: float
-    East: float
-
-
-@dataclass
-class Config:
-    # SMALL
-    # bounding_box: BoundingBox = BoundingBox(
-    #     South=56.3375,
-    #     West=-2.8059,
-    #     North=56.3437,
-    #     East=-2.7855
-    # )
-
-    # BIG
-    bounding_box: BoundingBox = BoundingBox(
-        South=56.3284,
-        West=-2.8350,
-        North=56.3437,
-        East=-2.7855
-    )
-
-    threshold: float = 0.15
-    neighbour_eps: float = 0.0005
-
+class WeightedTags:
     highway: Tuple[float, Dict[str, float]] = (1, {'cycleway': 1,
                                                    'footway': 0.8,
                                                    'path': 0.8,
@@ -78,3 +51,37 @@ class Config:
     def weight_sum(self):
         return self.highway[0] + self.bicycle[0] + self.bicycle_road[0] + self.cycleway[0] + self.foot[0] + \
             self.surface[0] + self.smoothness[0] + self.segregated[0]
+
+
+@dataclass
+class BoundingBox:
+    Node_id: int
+    South: float
+    West: float
+    North: float
+    East: float
+
+
+@dataclass
+class Config:
+    # SMALL
+    # bounding_box: BoundingBox = BoundingBox(
+    #     Node_id=21511530,
+    #     South=56.3375,
+    #     West=-2.8059,
+    #     North=56.3437,
+    #     East=-2.7855
+    # )
+
+    # BIG
+    bounding_box: BoundingBox = BoundingBox(
+        Node_id=21511530,
+        South=56.3284,
+        West=-2.8350,
+        North=56.3437,
+        East=-2.7855
+    )
+
+    weighted_tags: WeightedTags = WeightedTags()
+    threshold: float = 0.15
+    neighbour_eps: float = 0.0005

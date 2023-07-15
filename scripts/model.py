@@ -9,32 +9,23 @@ class Model:
         self.data_fetcher = DataFetcher(config.bounding_box)
         self.config = config
 
-    def get_graph(self):
+    def get_graph(self, threshold=None):
         ways = self.data_fetcher.get_ways()
-        filtered_ways = self.filter_ways(ways)
+        filtered_ways = self.filter_ways(ways, threshold)
         edges, all_nodes = self.ways_to_edges(filtered_ways)
-        edges = self.connect_close_nodes(edges, all_nodes)
         return edges, all_nodes
-
-    def connect_close_nodes(self, edges, all_nodes):
-        eps = self.config.neighbour_eps
-        for centre in all_nodes:
-            for node in all_nodes:
-                if abs(float(node.lon) - float(centre.lon)) <= eps and abs(float(node.lat) - float(centre.lat)) <= eps:
-                    if node is not centre:
-                        edges.add((centre.id, node.id))
-        return edges
 
     def eval_way(self, way: overpy.Way):
         score = 0
-        max_score = self.config.weight_sum()
+        max_score = self.config.weighted_tags.weight_sum()
         for tag, value in way.tags.items():
-            weight, mapping = self.config[tag]
+            weight, mapping = self.config.weighted_tags[tag]
             score += weight * mapping.get(value, 0)
         return score / max_score
 
-    def filter_ways(self, ways: list[overpy.Way]):
-        return [way for way in ways if self.eval_way(way) > self.config.threshold]
+    def filter_ways(self, ways: list[overpy.Way], threshold=None):
+        threshold = threshold if threshold else self.config.threshold
+        return [way for way in ways if self.eval_way(way) >= threshold]
 
     def node_in_area(self, node: overpy.Node):
         lon, lat = float(node.lon), float(node.lat)
