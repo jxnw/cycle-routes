@@ -25,22 +25,34 @@ class GraphProcessing:
         self.config = config
         self.model = Model(config)
         self.dol, self.nodes = self.model.get_graph()
+        # TODO: add weight (length of edges)
         self.graph = nx.Graph(self.dol)
         self.edges = set(self.graph.edges)
         self.layout = {node.id: (float(node.lon), float(node.lat)) for node in self.nodes}
         for node_name in self.graph.nodes:
             self.graph.nodes[node_name]['pos'] = self.layout[node_name]
 
-    def suggest_edges(self):
-        # TODO: add weight (length of edges)
+    def shortest_path_among_all_nodes(self):
+        pass
+
+    def shortest_path_between_central_nodes(self):
         unfiltered_graph = self.model.get_graph(threshold=0)
         sorted_groups = self.get_sorted_groups()
-        largest, larger = sorted_groups[0], sorted_groups[1]
-        largest_centre = min(largest, key=lambda n: math.dist(self.layout[n], self.model.data_fetcher.get_centre()))
-        larger_centre = min(larger, key=lambda n: math.dist(self.layout[n], self.model.data_fetcher.get_centre()))
-        shortest_path = nx.shortest_path(unfiltered_graph, largest_centre, larger_centre)
+        largest_groups = [sorted_groups[0], sorted_groups[1]]
+        largest_centres = [
+            min(largest_groups[0], key=lambda n: math.dist(self.layout[n], self.model.data_fetcher.get_centre())),
+            min(largest_groups[1], key=lambda n: math.dist(self.layout[n], self.model.data_fetcher.get_centre()))
+        ]
+        shortest_path = nx.shortest_path(unfiltered_graph, largest_centres[0], largest_centres[1])
         shortest_path_edges = [(shortest_path[i], shortest_path[i + 1]) for i in range(len(shortest_path) - 1)]
-        return shortest_path_edges
+        return self.trim_shortest_path(shortest_path_edges, largest_groups[0], largest_groups[1])
+
+    def trim_shortest_path(self, shortest_path, group_from, group_to):
+        enum_edges = list(enumerate(shortest_path))
+        edges_in_from = [(i, edge) for (i, edge) in enum_edges if edge[0] in group_from and edge[1] not in group_from]
+        edges_in_to = [(i, edge) for (i, edge) in enum_edges if edge[0] not in group_to and edge[1] in group_to]
+        start, end = edges_in_from[-1][0], edges_in_to[0][0]
+        return shortest_path[start:end + 1]
 
     def get_sorted_groups(self):
         return sorted(nx.connected_components(self.graph), key=lambda g: group_area(g, self.layout), reverse=True)
