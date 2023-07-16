@@ -32,26 +32,30 @@ class GraphProcessing:
             self.graph.nodes[node_name]['pos'] = self.layout[node_name]
 
     def suggest_edges(self):
+        # TODO: add weight (length of edges)
         unfiltered_graph = self.model.get_graph(threshold=0)
         sorted_groups = self.get_sorted_groups()
         largest, larger = sorted_groups[0], sorted_groups[1]
-        largest_centre = max(largest, key=lambda n: math.dist(self.layout[n], self.model.data_fetcher.get_centre()))
-        larger_centre = max(larger, key=lambda n: math.dist(self.layout[n], self.model.data_fetcher.get_centre()))
-        # TODO: add weight (length of edges)
+        largest_centre = min(largest, key=lambda n: math.dist(self.layout[n], self.model.data_fetcher.get_centre()))
+        larger_centre = min(larger, key=lambda n: math.dist(self.layout[n], self.model.data_fetcher.get_centre()))
         shortest_path = nx.shortest_path(unfiltered_graph, largest_centre, larger_centre)
         shortest_path_edges = [(shortest_path[i], shortest_path[i + 1]) for i in range(len(shortest_path) - 1)]
+        return shortest_path_edges
 
     def get_sorted_groups(self):
         return sorted(nx.connected_components(self.graph), key=lambda g: group_area(g, self.layout), reverse=True)
 
-    def draw_graph_with_largest_groups(self, filepath):
+    def draw_graph_with_largest_groups(self, filepath=None):
         sorted_groups = self.get_sorted_groups()
         nx.draw_networkx(self.graph, pos=self.layout, with_labels=False, node_size=5)
         nx.draw_networkx(self.graph.subgraph(list(sorted_groups[0])), pos=self.layout, node_color='r', edge_color='r',
                          with_labels=False, node_size=5)
         nx.draw_networkx(self.graph.subgraph(list(sorted_groups[1])), pos=self.layout, node_color='m', edge_color='m',
                          with_labels=False, node_size=5)
-        plt.savefig(filepath)
+        if filepath is not None:
+            plt.savefig(filepath)
+        else:
+            plt.show()
 
     def connect_close_nodes(self):
         new_edges = nx.geometric_edges(self.graph, radius=self.config.neighbour_eps)
