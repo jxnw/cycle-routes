@@ -1,5 +1,5 @@
-igraph
-matplotlib
-overpy
 ipykernel
+matplotlib
 networkx
+overpy
+scipy

@@ -16,4 +16,5 @@ class DataFetcher:
         return self.result.ways
 
     def get_centre(self):
-        return float(self.centre.nodes[0].lon), float(self.centre.nodes[0].lat)
+        # return float(self.centre.nodes[0].lon), float(self.centre.nodes[0].lat)
+        return -2.8350, 56.3284
