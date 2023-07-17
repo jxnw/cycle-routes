@@ -12,8 +12,8 @@ class Model:
     def get_graph(self, threshold=None):
         ways = self.data_fetcher.get_ways()
         filtered_ways = self.filter_ways(ways, threshold)
-        dol, all_nodes = self.ways_to_dol(filtered_ways)
-        return dol, all_nodes
+        adj_list = self.ways_to_dol(filtered_ways)
+        return adj_list
 
     def eval_way(self, way: overpy.Way):
         score = 0
@@ -40,25 +40,28 @@ class Model:
             for node in nodes:
                 link_counter[node.id] = link_counter.get(node.id, 0) + 1
 
-        all_nodes = set()
         dol: Dict[int, List[int]] = {}
         for way in ways:
-            nodes = way.get_nodes(resolve_missing=True)
+            nodes = way.get_nodes()
             nodes = [node for node in nodes if self.node_in_area(node)]
 
             cur_pointer = 0
+            cur_node = nodes[cur_pointer]
             next_pointer = cur_pointer + 1
             while next_pointer < len(nodes):
                 next_node = nodes[next_pointer]
                 if (link_counter[next_node.id] > 1 or next_pointer == len(nodes) - 1) \
-                        and nodes[cur_pointer].id != next_node.id:
-                    neighbours = dol.get(nodes[cur_pointer].id, [])
+                        and cur_node.id != next_node.id:
+                    neighbours = dol.get(cur_node.id, [])
                     neighbours.append(next_node.id)
-                    dol[nodes[cur_pointer].id] = neighbours
-                    all_nodes.add(nodes[cur_pointer])
-                    all_nodes.add(next_node)
+                    dol[cur_node.id] = neighbours
+
+                    neighbours = dol.get(next_node.id, [])
+                    neighbours.append(cur_node.id)
+                    dol[next_node.id] = neighbours
+
                     cur_pointer = next_pointer
                     next_pointer = cur_pointer + 1
                 else:
                     next_pointer += 1
-        return dol, all_nodes
+        return dol

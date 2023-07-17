@@ -9,6 +9,9 @@ class DataFetcher:
         self.result = self.api.query(f"nwr({box.South}, {box.West}, {box.North}, {box.East}); out;")
         self.centre = self.api.query(f"node({box.Node_id}); out;")
 
+    def get_node_by_id(self, node_id):
+        return self.result.get_node(node_id, resolve_missing=True)
+
     def get_ways(self):
         return self.result.ways
 
