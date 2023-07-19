@@ -9,13 +9,13 @@ class Model:
         self.data_fetcher = DataFetcher(config.bounding_box)
         self.config = config
 
-    def get_graph(self, threshold=None):
+    def get_graph(self, threshold=None) -> Dict[int, List[int]]:
         ways = self.data_fetcher.get_ways()
         filtered_ways = self.filter_ways(ways, threshold)
         adj_list = self.ways_to_dol(filtered_ways)
         return adj_list
 
-    def eval_way(self, way: overpy.Way):
+    def eval_way(self, way: overpy.Way) -> float:
         score = 0
         max_score = self.config.weighted_tags.weight_sum()
         for tag, value in way.tags.items():
@@ -23,16 +23,16 @@ class Model:
             score += weight * mapping.get(value, 0)
         return score / max_score
 
-    def filter_ways(self, ways: list[overpy.Way], threshold=None):
+    def filter_ways(self, ways: List[overpy.Way], threshold=None) -> List[overpy.Way]:
         threshold = threshold if threshold is not None else self.config.threshold
         return [way for way in ways if self.eval_way(way) >= threshold]
 
-    def node_in_area(self, node: overpy.Node):
+    def node_in_area(self, node: overpy.Node) -> bool:
         lon, lat = float(node.lon), float(node.lat)
         box = self.config.bounding_box
         return (lon <= box.East) and (lon >= box.West) and (lat >= box.South) and (lat <= box.North)
 
-    def ways_to_dol(self, ways: List[overpy.Way]):
+    def ways_to_dol(self, ways: List[overpy.Way]) -> Dict[int, List[int]]:
         link_counter: Dict[int, int] = {}
         for way in ways:
             nodes = way.get_nodes(resolve_missing=True)

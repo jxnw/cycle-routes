@@ -64,16 +64,6 @@ class BoundingBox:
 
 @dataclass
 class Config:
-    # SMALL
-    # bounding_box: BoundingBox = BoundingBox(
-    #     Node_id=21511530,
-    #     South=56.3375,
-    #     West=-2.8059,
-    #     North=56.3437,
-    #     East=-2.7855
-    # )
-
-    # BIG
     bounding_box: BoundingBox = BoundingBox(
         Node_id=21511530,
         South=56.3284,
