@@ -62,15 +62,26 @@ class BoundingBox:
     East: float
 
 
+ST_ANDREWS = BoundingBox(
+    Node_id=21511530,
+    South=56.3284,
+    West=-2.8350,
+    North=56.3437,
+    East=-2.7855
+)
+
+CAMBRIDGE = BoundingBox(
+    Node_id=20971094,
+    South=52.1956,
+    West=0.0757,
+    North=52.2372,
+    East=0.1581
+)
+
+
 @dataclass
 class Config:
-    bounding_box: BoundingBox = BoundingBox(
-        Node_id=21511530,
-        South=56.3284,
-        West=-2.8350,
-        North=56.3437,
-        East=-2.7855
-    )
+    bounding_box: BoundingBox = ST_ANDREWS
 
     weighted_tags: WeightedTags = WeightedTags()
     threshold: float = 0.15

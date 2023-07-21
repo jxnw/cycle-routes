@@ -4,14 +4,14 @@ import networkx as nx
 import numpy as np
 from scripts.config import Config
 from scripts.model import Model
-from typing import List, Set, Tuple
+from typing import Dict, List, Set, Tuple
 
 
 def poly_area(x: List[float], y: List[float]):
     return 0.5 * np.abs(np.dot(x, np.roll(y, 1)) - np.dot(y, np.roll(x, 1)))
 
 
-def group_area(group: Set[int], layout):
+def group_area(group: Set[int], layout: Dict[int, Tuple[float, float]]):
     coordinates = [layout.get(node_id) for node_id in group]
     south = min(coordinates, key=lambda x: x[1])
     west = min(coordinates, key=lambda x: x[0])
