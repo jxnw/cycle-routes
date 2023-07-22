@@ -56,6 +56,13 @@
 				"opposite_share_busway": 0.6
 			}
 		},
+		"maxspeed": {
+			"weight": 1,
+			"values": {
+				"0,20": 1,
+				"20,30": 0.8
+			}
+		},
 		"surface": {
 			"weight": 0.8,
 			"values": {

@@ -21,7 +21,17 @@ class Model:
         for tag_key, tag_value in way.tags.items():
             tag = self.config.weighted_tags[tag_key]
             weight, mapping = tag.weight, tag.values
-            score += weight * mapping.get(tag_value, 0)
+            tag_score = 0
+            if tag_key == 'maxspeed':
+                for m_key, m_value in mapping.items():
+                    m_range = m_key.split(',')
+                    start, end = int(m_range[0]), int(m_range[1])
+                    if start < m_value <= end:
+                        tag_score = m_value
+                        break
+            else:
+                tag_score = mapping.get(tag_value, 0)
+            score += weight * tag_score
         return score / max_score
 
     def filter_ways(self, ways: List[overpy.Way], threshold=None) -> List[overpy.Way]:

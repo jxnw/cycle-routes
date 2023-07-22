@@ -52,7 +52,7 @@ class WeightedTags:
     def __getitem__(self, item):
         if item in TAG_MAPPINGS.keys():
             item = TAG_MAPPINGS[item]
-        return self.tags.get(item, Tag(0, {}))
+        return self.tags.get(item, Tag(weight=0, values={}))
 
     def weight_sum(self):
         return sum([tag.weight for tag in self.tags.values()])
