@@ -57,42 +57,42 @@
 			}
 		},
 		"maxspeed": {
-			"weight": 1,
+			"weight": 0.75,
 			"values": {
 				"0,20": 1,
 				"20,30": 0.8
 			}
 		},
 		"surface": {
-			"weight": 0.8,
+			"weight": 0.5,
 			"values": {
-				"paved": 0.8,
-				"asphalt": 0.8,
-				"concrete": 0.8,
-				"paving_stones": 0.8
+				"paved": 1,
+				"asphalt": 1,
+				"concrete": 1,
+				"paving_stones": 1
 			}
 		},
 		"smoothness": {
-			"weight": 0.8,
+			"weight": 0.5,
 			"values": {
-				"excellent": 0.8,
-				"good": 0.8,
-				"intermediate": 0.8,
+				"excellent": 1,
+				"good": 1,
+				"intermediate": 1,
 				"bad": 0.5,
 				"very_bad": 0.5
 			}
 		},
 		"segregated": {
-			"weight": 0.5,
+			"weight": 0.25,
 			"values": {
-				"yes": 0.7,
-				"no": 0.3
+				"yes": 1,
+				"no": 0.5
 			}
 		},
 		"foot": {
-			"weight": 0.5,
+			"weight": 0.25,
 			"values": {
-				"designated": 0.8
+				"designated": 1
 			}
 		}
 	}

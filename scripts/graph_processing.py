@@ -169,6 +169,11 @@ class GraphProcessing:
         else:
             plt.show()
 
+    def add_path_to_graph(self, path: List[Tuple[int, int]]):
+        new_graph = self.graph_friendly.copy()
+        new_graph.add_edges_from(path)
+        return new_graph
+
     def connect_close_nodes(self):
         new_edges = nx.geometric_edges(self.graph_friendly, radius=self.config.neighbour_eps)
         self.graph_friendly.add_edges_from(new_edges)
