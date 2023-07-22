@@ -18,9 +18,10 @@ class Model:
     def eval_way(self, way: overpy.Way) -> float:
         score = 0
         max_score = self.config.weighted_tags.weight_sum()
-        for tag, value in way.tags.items():
-            weight, mapping = self.config.weighted_tags[tag]
-            score += weight * mapping.get(value, 0)
+        for tag_key, tag_value in way.tags.items():
+            tag = self.config.weighted_tags[tag_key]
+            weight, mapping = tag.weight, tag.values
+            score += weight * mapping.get(tag_value, 0)
         return score / max_score
 
     def filter_ways(self, ways: List[overpy.Way], threshold=None) -> List[overpy.Way]:
@@ -30,7 +31,7 @@ class Model:
     def node_in_area(self, node: overpy.Node) -> bool:
         lon, lat = float(node.lon), float(node.lat)
         box = self.config.bounding_box
-        return (lon <= box.East) and (lon >= box.West) and (lat >= box.South) and (lat <= box.North)
+        return (lon <= box.east) and (lon >= box.west) and (lat >= box.south) and (lat <= box.north)
 
     def ways_to_dol(self, ways: List[overpy.Way]) -> Dict[int, List[int]]:
         link_counter: Dict[int, int] = {}

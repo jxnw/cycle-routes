@@ -53,10 +53,13 @@ class GraphProcessing:
         sorted_groups = self.get_sorted_groups()
         self.largest_groups = [sorted_groups[0], sorted_groups[1]]
 
-    def shortest_path_among_all_nodes(self, from_region, to_region):
+    def shortest_path_among_all_nodes(self, regions: Tuple[Set[int], Set[int]] = None):
         """
         Find the shortest path between any node in from_region and any node in to_region.
         """
+        if regions is None:
+            regions = (self.largest_groups[0], self.largest_groups[1])
+        from_region, to_region = regions
         dist = float('inf')
         shortest_path = []
         for target in to_region:
@@ -68,11 +71,14 @@ class GraphProcessing:
         shortest_path_edges = [(shortest_path[i], shortest_path[i + 1]) for i in range(len(shortest_path) - 1)]
         return dist, trim_shortest_path(shortest_path_edges, from_region, to_region)
 
-    def shortest_path_between_central_nodes_in_town(self, from_region: Set[int], to_region: Set[int]):
+    def shortest_path_between_central_nodes_in_town(self, regions: Tuple[Set[int], Set[int]] = None):
         """
         Find the shortest path between the central node in from_region and the central node in to_region,
         where the central node in a region is the node nearest to the centre of the town.
         """
+        if regions is None:
+            regions = (self.largest_groups[0], self.largest_groups[1])
+        from_region, to_region = regions
         largest_centres = [
             min(from_region, key=lambda n: math.dist(self.layout[n], self.model.data_fetcher.get_centre())),
             min(to_region, key=lambda n: math.dist(self.layout[n], self.model.data_fetcher.get_centre()))
@@ -82,11 +88,14 @@ class GraphProcessing:
         shortest_path_edges = [(shortest_path[i], shortest_path[i + 1]) for i in range(len(shortest_path) - 1)]
         return dist, trim_shortest_path(shortest_path_edges, from_region, to_region)
 
-    def shortest_path_between_central_nodes_in_region(self, from_region: Set[int], to_region: Set[int]):
+    def shortest_path_between_central_nodes_in_region(self, regions: Tuple[Set[int], Set[int]] = None):
         """
         Find the shortest path between the central node in from_region and the central node in to_region,
         where the central node in a region is the node nearest to the centre of the region.
         """
+        if regions is None:
+            regions = (self.largest_groups[0], self.largest_groups[1])
+        from_region, to_region = regions
         centre_from = self.get_centre_of_region(from_region)
         centre_to = self.get_centre_of_region(to_region)
         largest_centres = [
@@ -98,11 +107,14 @@ class GraphProcessing:
         shortest_path_edges = [(shortest_path[i], shortest_path[i + 1]) for i in range(len(shortest_path) - 1)]
         return dist, trim_shortest_path(shortest_path_edges, from_region, to_region)
 
-    def shortest_path_with_existing_paths(self, from_region: Set[int], to_region: Set[int]):
+    def shortest_path_with_existing_paths(self, regions: Tuple[Set[int], Set[int]] = None):
         """
         Find the shortest path between any node in from_region and any node in to_region, making use of existing
         cycle-friendly paths.
         """
+        if regions is None:
+            regions = (self.largest_groups[0], self.largest_groups[1])
+        from_region, to_region = regions
         dist = float('inf')
         shortest_path = []
         for target in to_region:

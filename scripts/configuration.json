@@ -1,0 +1,92 @@
+{
+	"area": "StAndrews",
+	"threshold": 0.15,
+	"neighbourEps": 0.0005,
+	"boundingBoxes": {
+		"StAndrews": {
+			"nodeId": 21511530,
+			"south": 56.3284,
+			"west": -2.8350,
+			"north": 56.3437,
+			"east": -2.7855
+		},
+		"Cambridge": {
+			"nodeId": 20971094,
+			"south": 52.1956,
+			"west": 0.0757,
+			"north": 52.2372,
+			"east": 0.1581
+		}
+	},
+	"weightedTags": {
+		"highway": {
+			"weight": 1,
+			"values": {
+				"cycleway": 1,
+				"footway": 0.8,
+				"path": 0.8,
+				"residential": 0.7,
+				"track": 0.7,
+				"tertiary": 0.3,
+				"secondary": 0.2,
+				"primary": 0.1,
+				"service": 0.1
+			}
+		},
+		"bicycle": {
+			"weight": 1,
+			"values": {
+				"designated": 0.8,
+				"yes": 0.8
+			}
+		},
+		"bicycle_road": {
+			"weight": 1,
+			"values": {
+				"yes": 1
+			}
+		},
+		"cycleway": {
+			"weight": 1,
+			"values": {
+				"track": 1,
+				"lane": 0.8,
+				"shared_lane": 0.6,
+				"share_busway": 0.6,
+				"opposite_share_busway": 0.6
+			}
+		},
+		"surface": {
+			"weight": 0.8,
+			"values": {
+				"paved": 0.8,
+				"asphalt": 0.8,
+				"concrete": 0.8,
+				"paving_stones": 0.8
+			}
+		},
+		"smoothness": {
+			"weight": 0.8,
+			"values": {
+				"excellent": 0.8,
+				"good": 0.8,
+				"intermediate": 0.8,
+				"bad": 0.5,
+				"very_bad": 0.5
+			}
+		},
+		"segregated": {
+			"weight": 0.5,
+			"values": {
+				"yes": 0.7,
+				"no": 0.3
+			}
+		},
+		"foot": {
+			"weight": 0.5,
+			"values": {
+				"designated": 0.8
+			}
+		}
+	}
+}
