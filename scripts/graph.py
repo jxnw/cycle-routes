@@ -12,9 +12,10 @@ class Graph:
         self.model = model
         self.config = model.config
 
-        adj_list, node_list = self.model.get_graph()
+        adj_list = self.model.get_adj_list()
         self.graph = nx.Graph(adj_list)
 
+        node_list = self.model.get_node_list()
         for node in node_list:
             self.graph.nodes[node.id]['pos'] = (float(node.lon), float(node.lat))
         self.layout = nx.get_node_attributes(self.graph, 'pos')

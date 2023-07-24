@@ -6,46 +6,46 @@ import overpy
 class Model:
     def __init__(self, data_fetcher: DataFetcher, threshold=None):
         self.config = data_fetcher.config
-        self.ways_to_nodes_mapping = data_fetcher.ways_to_nodes_mapping
         self.threshold = threshold if threshold is not None else self.config.threshold
 
         all_ways = data_fetcher.get_ways()
-        friendly_way_ids = self.filter_ways(all_ways)
-        link_counter = self.get_link_counter()
+        nodes_on_ways = data_fetcher.get_nodes_on_ways()
+        filtered_way_ids = self.filter_ways(all_ways)
 
-        self.adj_list = self.get_adj_list_from_ways(link_counter, friendly_way_ids)
+        self.filtered_hyper_edges = [nodes_on_ways[way_id] for way_id in filtered_way_ids]
+        self.link_counter = self.count_node_links()
+        self.adj_list = self.ways_to_adj_list()
         self.node_list = [data_fetcher.get_node_by_id(node_id) for node_id in self.adj_list.keys()]
 
-    def get_graph(self) -> Tuple[Dict[int, List[int]], List[overpy.Node]]:
-        return self.adj_list, self.node_list
+    def get_adj_list(self) -> Dict[int, List[int]]:
+        return self.adj_list
 
-    def get_link_counter(self) -> Dict[int, int]:
+    def get_node_list(self) -> List[overpy.Node]:
+        return self.node_list
+
+    def count_node_links(self) -> Dict[int, int]:
         link_counter: Dict[int, int] = {}
-        for _, nodes in self.ways_to_nodes_mapping.items():
-            for node in set(nodes):
+        for hyper_edge in self.filtered_hyper_edges:
+            for node in hyper_edge:
                 link_counter[node.id] = link_counter.get(node.id, 0) + 1
         return link_counter
 
-    def get_adj_list_from_ways(self, link_counter: Dict[int, int], way_ids: List[int]) -> Dict[int, List[int]]:
+    def ways_to_adj_list(self) -> Dict[int, List[int]]:
         adj_list: Dict[int, List[int]] = {}
 
-        friendly_mapping = [self.ways_to_nodes_mapping[way_id] for way_id in way_ids]
-        for nodes in friendly_mapping:
-            nodes = [node for node in nodes if self.node_in_area(node)]
-
+        for hyper_edge in self.filtered_hyper_edges:
             cur_pointer = 0
-            cur_node = nodes[cur_pointer]
+            cur_node = hyper_edge[cur_pointer]
             next_pointer = cur_pointer + 1
-            while next_pointer < len(nodes):
-                next_node = nodes[next_pointer]
-                if (link_counter[next_node.id] > 1 or next_pointer == len(nodes) - 1) and cur_node.id != next_node.id:
+            while next_pointer < len(hyper_edge):
+                next_node = hyper_edge[next_pointer]
+                if (self.link_counter[next_node.id] > 1 or next_pointer == len(hyper_edge) - 1) \
+                        and cur_node.id != next_node.id:
                     neighbours = adj_list.get(cur_node.id, [])
                     neighbours.append(next_node.id)
                     adj_list[cur_node.id] = neighbours
 
-                    neighbours = adj_list.get(next_node.id, [])
-                    neighbours.append(cur_node.id)
-                    adj_list[next_node.id] = neighbours
+                    adj_list[next_node.id] = adj_list.get(next_node.id, [])
 
                     cur_pointer = next_pointer
                     next_pointer = cur_pointer + 1
@@ -74,8 +74,3 @@ class Model:
                 tag_score = mapping.get(tag_value, 0)
             score += weight * tag_score
         return score / max_score
-
-    def node_in_area(self, node: overpy.Node) -> bool:
-        lon, lat = float(node.lon), float(node.lat)
-        box = self.config.bounding_box
-        return (lon <= box.east) and (lon >= box.west) and (lat >= box.south) and (lat <= box.north)

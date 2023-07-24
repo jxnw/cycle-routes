@@ -21,10 +21,12 @@ def main():
         config = Config.from_dict(config_json)
 
     data_fetcher = DataFetcher(config)
-    model_default = Model(data_fetcher, threshold=0)
+
     model_friendly = Model(data_fetcher)
-    graph_default = GraphProcessing(model_default)
     graph_friendly = GraphProcessing(model_friendly)
+
+    model_complete = Model(data_fetcher, threshold=0)
+    graph_complete = GraphProcessing(model_complete)
 
     # graph_processing.draw_graph_with_largest_groups(os.path.join(root, args.save, 'connected_components.png'))
     #
