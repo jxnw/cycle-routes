@@ -2,7 +2,6 @@ import math
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
-from scripts.config import Config
 from scripts.model import Model
 from typing import Dict, List, Set, Tuple
 
@@ -30,28 +29,19 @@ def trim_shortest_path(shortest_path: List[Tuple[int, int]], from_region: Set[in
 
 
 class GraphProcessing:
-    def __init__(self, config: Config):
-        self.config = config
-        self.model = Model(config)
+    def __init__(self, model: Model):
+        self.model = model
+        self.config = model.config
 
-        adj_list_all = self.model.get_graph(threshold=0)
-        self.graph_all = nx.Graph(adj_list_all)
-        nodes_all = [self.model.data_fetcher.get_node_by_id(node_id) for node_id in adj_list_all.keys()]
-        for node in nodes_all:
-            self.graph_all.nodes[node.id]['pos'] = (float(node.lon), float(node.lat))
+        adj_list, node_list = self.model.get_graph()
+        self.graph = nx.Graph(adj_list)
+        for node in node_list:
+            self.graph.nodes[node.id]['pos'] = (float(node.lon), float(node.lat))
+        self.layout = nx.get_node_attributes(self.graph, 'pos')
 
-        adj_list_friendly = self.model.get_graph()
-        self.graph_friendly = nx.Graph(adj_list_friendly)
-        nodes_friendly = [self.model.data_fetcher.get_node_by_id(node_id) for node_id in
-                          adj_list_friendly.keys()]
-        for node in nodes_friendly:
-            self.graph_friendly.nodes[node.id]['pos'] = (float(node.lon), float(node.lat))
-
-        self.layout = nx.get_node_attributes(self.graph_all, 'pos')
-
-        self.connect_close_nodes()
-        sorted_groups = self.get_sorted_groups()
-        self.largest_groups = [sorted_groups[0], sorted_groups[1]]
+        # self.connect_close_nodes()
+        # sorted_groups = self.get_sorted_groups()
+        # self.largest_groups = [sorted_groups[0], sorted_groups[1]]
 
     def shortest_path_among_all_nodes(self, regions: Tuple[Set[int], Set[int]] = None):
         """
@@ -139,9 +129,8 @@ class GraphProcessing:
     def get_edge_weight(self, u: int, v: int, _):
         return math.dist(self.layout[u], self.layout[v]) * 10000
 
-    def get_sorted_groups(self):
-        return sorted(nx.connected_components(self.graph_friendly), key=lambda g: group_area(g, self.layout),
-                      reverse=True)
+    def get_connected_components(self):
+        return sorted(nx.connected_components(self.graph), key=lambda g: group_area(g, self.layout), reverse=True)
 
     def draw_graph_with_largest_groups(self, filepath=None):
         fig, ax = plt.subplots()
