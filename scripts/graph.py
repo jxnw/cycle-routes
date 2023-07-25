@@ -20,11 +20,11 @@ class GraphProcessing:
         self.layout = self.model.get_node_pos(adj_list_complete)
 
         self.graph_complete = nx.Graph(adj_list_complete)
+        self.graph = nx.Graph(adj_list)
+
         edge_length = {edge: self.__get_edge_length(edge) for edge in self.graph_complete.edges}
         nx.set_node_attributes(self.graph_complete, self.layout, 'pos')
         nx.set_edge_attributes(self.graph_complete, edge_length, 'length')
-
-        self.graph = nx.Graph(adj_list)
         nx.set_node_attributes(self.graph, self.layout, 'pos')
         nx.set_edge_attributes(self.graph, edge_length, 'length')
 
