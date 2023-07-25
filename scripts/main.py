@@ -30,17 +30,22 @@ def main():
     graph_processing.display(filepath=os.path.join(root, args.save, 'cycle_friendly.png'))
     graph_processing.display(largest_components, filepath=os.path.join(root, args.save, 'components.png'))
 
-    dist, path = graph_processing.shortest_path_overall(region_from, region_to)
-    graph_processing.display_path_between_subgraph(path, region_from, region_to,
-                                                   filepath=os.path.join(root, args.save, 'path_overall.png'))
+    strategies = config.strategies
 
-    dist, path = graph_processing.shortest_path_town_centre(region_from, region_to)
-    graph_processing.display_path_between_subgraph(path, region_from, region_to,
-                                                   filepath=os.path.join(root, args.save, 'path_town_centre.png'))
+    if strategies.get('overall', False):
+        dist, path = graph_processing.shortest_path_overall(region_from, region_to)
+        graph_processing.display_path_between_subgraph(path, region_from, region_to,
+                                                       filepath=os.path.join(root, args.save, 'path_overall.png'))
 
-    dist, path = graph_processing.shortest_path_local_centre(region_from, region_to)
-    graph_processing.display_path_between_subgraph(path, region_from, region_to,
-                                                   filepath=os.path.join(root, args.save, 'path_local_centre.png'))
+    if strategies.get('centreTown', False):
+        dist, path = graph_processing.shortest_path_town_centre(region_from, region_to)
+        graph_processing.display_path_between_subgraph(path, region_from, region_to,
+                                                       filepath=os.path.join(root, args.save, 'path_town_centre.png'))
+
+    if strategies.get('centreLocal', False):
+        dist, path = graph_processing.shortest_path_local_centre(region_from, region_to)
+        graph_processing.display_path_between_subgraph(path, region_from, region_to,
+                                                       filepath=os.path.join(root, args.save, 'path_local_centre.png'))
 
 
 if __name__ == '__main__':

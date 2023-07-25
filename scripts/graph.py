@@ -124,6 +124,8 @@ class GraphProcessing:
         return area(Polygon(bbox))
 
     def __get_edge_length(self, edge: Tuple[int, int]):
+        if self.config.zero_cost and edge in self.graph.edges:
+            return 0
         return math.dist(self.layout[edge[0]], self.layout[edge[1]]) * 10000
 
     def __get_geometric_edges(self, graph) -> List[Tuple[int, int]]:
