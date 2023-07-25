@@ -4,7 +4,7 @@ import os
 from scripts.config import Config
 from scripts.data_fetcher import DataFetcher
 from scripts.model import Model
-from scripts.graph_processing import GraphProcessing
+from scripts.graph import GraphProcessing
 
 
 def main():
@@ -21,12 +21,8 @@ def main():
         config = Config.from_dict(config_json)
 
     data_fetcher = DataFetcher(config)
-
-    model_friendly = Model(data_fetcher)
-    graph_friendly = GraphProcessing(model_friendly)
-
-    model_complete = Model(data_fetcher, threshold=0)
-    graph_complete = GraphProcessing(model_complete)
+    model = Model(data_fetcher)
+    graph_processing = GraphProcessing(model)
 
     # graph_processing.draw_graph_with_largest_groups(os.path.join(root, args.save, 'connected_components.png'))
     #

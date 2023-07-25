@@ -20,15 +20,15 @@ class DataFetcherTestCase(unittest.TestCase):
         calls = [call('nwr(0.1, 0.2, 0.3, 0.4); out;'), call('node(123); out;')]
         self.mock_api.return_value.query.assert_has_calls(calls)
 
-    def test_get_node_by_id(self):
+    def test_get_node_pos_by_ids(self):
         mock_result = Mock(spec=overpy.Result)
         mock_result.get_node.return_value = self.mock_node
         self.data_fetcher.result = mock_result
 
-        node = self.data_fetcher.get_node_by_id(123)
+        pos = self.data_fetcher.get_node_pos_by_ids([123])
 
-        mock_result.get_node.assert_called_once_with(123, resolve_missing=True)
-        self.assertEqual(node, self.mock_node)
+        mock_result.get_node.assert_called_once_with(123)
+        self.assertEqual(pos[123], (0.5, 0.6))
 
     def test_get_ways(self):
         mock_result = Mock(spec=overpy.Result)
