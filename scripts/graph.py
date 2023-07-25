@@ -12,6 +12,7 @@ class GraphProcessing:
     def __init__(self, model: Model):
         self.model = model
         self.config = model.config
+        self.centre = model.centre
 
         adj_list_complete = self.model.get_adj_list(threshold=0)
         adj_list = self.model.get_adj_list()
@@ -27,7 +28,14 @@ class GraphProcessing:
         nx.set_node_attributes(self.graph, self.layout, 'pos')
         nx.set_edge_attributes(self.graph, edge_length, 'length')
 
-    def get_suggested_path(self, from_region, to_region, strategy=None):
+        self.connect_close_nodes()
+        sorted_groups = self.get_connected_components()
+        self.largest_groups = [sorted_groups[0], sorted_groups[1]]
+
+    def shortest_path_overall(self, from_region: Set[int], to_region: Set[int]):
+        """
+        Find the shortest path between any node in from_region and any node in to_region.
+        """
         dist = float('inf')
         shortest_path = []
         for target in to_region:
@@ -38,6 +46,29 @@ class GraphProcessing:
         shortest_path_edges = [(shortest_path[i], shortest_path[i + 1]) for i in range(len(shortest_path) - 1)]
         return dist, shortest_path_edges
 
+    def shortest_path_town_centre(self, from_region: Set[int], to_region: Set[int]):
+        """
+        Find the shortest path between the central node in from_region and the central node in to_region,
+        where the central node in a region is the node nearest to the centre of the town.
+        """
+        node_from = min(from_region, key=lambda n: math.dist(self.layout[n], self.centre))
+        node_to = min(to_region, key=lambda n: math.dist(self.layout[n], self.centre))
+        dist, shortest_path = nx.single_source_dijkstra(self.graph_complete, node_from, node_to, weight='length')
+        shortest_path_edges = [(shortest_path[i], shortest_path[i + 1]) for i in range(len(shortest_path) - 1)]
+        return dist, shortest_path_edges
+
+    def shortest_path_local_centre(self, from_region: Set[int], to_region: Set[int]):
+        """
+        Find the shortest path between the central node in from_region and the central node in to_region,
+        where the central node in a region is the node nearest to the centre of the region.
+        """
+        centre_from, centre_to = self.get_centre_of_nodes(from_region), self.get_centre_of_nodes(to_region)
+        node_from = min(from_region, key=lambda n: math.dist(self.layout[n], centre_from))
+        node_to = min(to_region, key=lambda n: math.dist(self.layout[n], centre_to))
+        dist, shortest_path = nx.single_source_dijkstra(self.graph_complete, node_from, node_to, weight='length')
+        shortest_path_edges = [(shortest_path[i], shortest_path[i + 1]) for i in range(len(shortest_path) - 1)]
+        return dist, shortest_path_edges
+
     def get_connected_components(self) -> List[Set[int]]:
         return sorted(nx.connected_components(self.graph), key=self.__group_area, reverse=True)
 
@@ -45,12 +76,6 @@ class GraphProcessing:
         g = nx.subgraph(self.graph, nodes)
         centre = list(nx.center(g, weight='length'))[0]
         return self.layout[centre]
-
-    def get_geometric_edges(self) -> List[Tuple[int, int]]:
-        """
-        Get new edges that connect geometrically close nodes.
-        """
-        return nx.geometric_edges(self.graph, radius=self.config.neighbour_eps)
 
     def add_edges_to_graph(self, edges: List[Tuple[int, int]]):
         self.graph.add_edges_from(edges)
@@ -73,15 +98,21 @@ class GraphProcessing:
         fig, ax = plt.subplots()
         nx.draw_networkx(self.graph, pos=self.layout, with_labels=False, node_size=5, ax=ax)
         nx.draw_networkx(self.graph.subgraph(from_region), pos=self.layout, with_labels=False, node_size=5, ax=ax,
-                         node_color='r', edge_color='r')
-        nx.draw_networkx(self.graph.subgraph(to_region), pos=self.layout, with_labels=False, node_size=5, ax=ax,
                          node_color='m', edge_color='m')
+        nx.draw_networkx(self.graph.subgraph(to_region), pos=self.layout, with_labels=False, node_size=5, ax=ax,
+                         node_color='r', edge_color='r')
         nx.draw_networkx(nx.Graph(path), pos=self.layout, with_labels=False, node_size=5, ax=ax,
                          node_color='y', edge_color='y')
         if filepath is not None:
             fig.savefig(filepath)
         else:
             plt.show()
+
+    def connect_close_nodes(self):
+        new_edges = nx.geometric_edges(self.graph, radius=self.config.neighbour_eps)
+        self.graph.add_edges_from(new_edges)
+        new_edges = nx.geometric_edges(self.graph_complete, radius=self.config.neighbour_eps)
+        self.graph_complete.add_edges_from(new_edges)
 
     def __group_area(self, group: Set[int]):
         coordinates = [self.layout.get(node_id) for node_id in group]
@@ -94,3 +125,6 @@ class GraphProcessing:
 
     def __get_edge_length(self, edge: Tuple[int, int]):
         return math.dist(self.layout[edge[0]], self.layout[edge[1]]) * 10000
+
+    def __get_geometric_edges(self, graph) -> List[Tuple[int, int]]:
+        return nx.geometric_edges(graph, radius=self.config.neighbour_eps)

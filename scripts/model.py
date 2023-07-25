@@ -9,6 +9,7 @@ class Model:
         self.config = data_fetcher.config
         self.all_ways = data_fetcher.get_ways()
         self.nodes_on_ways = data_fetcher.get_nodes_on_ways()
+        self.centre = data_fetcher.get_centre()
 
     def get_adj_list(self, threshold=None):
         threshold = threshold if threshold is not None else self.config.threshold
@@ -20,14 +21,16 @@ class Model:
     def get_node_pos(self, adj_list: Dict[int, List[int]]):
         return self.data_fetcher.get_node_pos_by_ids(list(adj_list.keys()))
 
-    def count_node_links(self, hyper_edges: List[List[overpy.Node]]) -> Dict[int, int]:
+    @staticmethod
+    def count_node_links(hyper_edges: List[List[overpy.Node]]) -> Dict[int, int]:
         link_counter: Dict[int, int] = {}
         for hyper_edge in hyper_edges:
             for node in hyper_edge:
                 link_counter[node.id] = link_counter.get(node.id, 0) + 1
         return link_counter
 
-    def ways_to_adj_list(self, hyper_edges: List[List[overpy.Node]], link_count: Dict[int, int]) -> Dict[int, List[int]]:
+    @staticmethod
+    def ways_to_adj_list(hyper_edges: List[List[overpy.Node]], link_count: Dict[int, int]) -> Dict[int, List[int]]:
         adj_list: Dict[int, List[int]] = {}
         for hyper_edge in hyper_edges:
             cur_pointer = 0

@@ -24,19 +24,23 @@ def main():
     model = Model(data_fetcher)
     graph_processing = GraphProcessing(model)
 
-    # graph_processing.draw_graph_with_largest_groups(os.path.join(root, args.save, 'connected_components.png'))
-    #
-    # dist, path = graph_processing.shortest_path_among_all_nodes()
-    # graph_processing.draw_graph_with_suggested_path(path, os.path.join(root, args.save, 'path_all.png'))
-    #
-    # dist, path = graph_processing.shortest_path_between_central_nodes_in_town()
-    # graph_processing.draw_graph_with_suggested_path(path, os.path.join(root, args.save, 'path_central_town.png'))
-    #
-    # dist, path = graph_processing.shortest_path_between_central_nodes_in_region()
-    # graph_processing.draw_graph_with_suggested_path(path, os.path.join(root, args.save, 'path_central_region.png'))
-    #
-    # dist, path = graph_processing.shortest_path_with_existing_paths()
-    # graph_processing.draw_graph_with_suggested_path(path, os.path.join(root, args.save, 'path_with_existing.png'))
+    largest_components = graph_processing.largest_groups
+    region_from, region_to = largest_components
+
+    graph_processing.display(filepath=os.path.join(root, args.save, 'cycle_friendly.png'))
+    graph_processing.display(largest_components, filepath=os.path.join(root, args.save, 'components.png'))
+
+    dist, path = graph_processing.shortest_path_overall(region_from, region_to)
+    graph_processing.display_path_between_subgraph(path, region_from, region_to,
+                                                   filepath=os.path.join(root, args.save, 'path_overall.png'))
+
+    dist, path = graph_processing.shortest_path_town_centre(region_from, region_to)
+    graph_processing.display_path_between_subgraph(path, region_from, region_to,
+                                                   filepath=os.path.join(root, args.save, 'path_town_centre.png'))
+
+    dist, path = graph_processing.shortest_path_local_centre(region_from, region_to)
+    graph_processing.display_path_between_subgraph(path, region_from, region_to,
+                                                   filepath=os.path.join(root, args.save, 'path_local_centre.png'))
 
 
 if __name__ == '__main__':

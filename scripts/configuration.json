@@ -2,6 +2,11 @@
 	"area": "StAndrews",
 	"threshold": 0.15,
 	"neighbourEps": 0.0005,
+	"strategies": {
+		"overall": true,
+		"centreTown": true,
+		"centreLocal": true
+	},
 	"boundingBoxes": {
 		"StAndrews": {
 			"nodeId": 21511530,
