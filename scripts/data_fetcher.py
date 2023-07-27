@@ -12,9 +12,6 @@ class DataFetcher:
         self.result = api.query(f"nwr({self.box.south}, {self.box.west}, {self.box.north}, {self.box.east}); out;")
         self.centre = api.query(f"node({self.box.node_id}); out;")
 
-    def get_ways(self) -> List[overpy.Way]:
-        return self.result.ways
-
     def get_node_pos_by_ids(self, node_ids: List[int]) -> Dict[int, Tuple[float, float]]:
         node_pos: Dict[int, Tuple[float, float]] = {}
         for node_id in node_ids:
@@ -29,6 +26,9 @@ class DataFetcher:
             nodes = [node for node in nodes if self.__node_in_area(node)]
             mapping[way.id] = nodes
         return mapping
+
+    def get_ways(self) -> List[overpy.Way]:
+        return self.result.ways
 
     def get_centre(self) -> Tuple[float, float]:
         return float(self.centre.nodes[0].lon), float(self.centre.nodes[0].lat)

@@ -28,7 +28,20 @@ class DataFetcherTestCase(unittest.TestCase):
         pos = self.data_fetcher.get_node_pos_by_ids([123])
 
         mock_result.get_node.assert_called_once_with(123)
-        self.assertEqual(pos[123], (0.5, 0.6))
+        self.assertEqual((0.5, 0.6), pos[123])
+
+    def test_get_nodes_on_ways(self):
+        mock_result = Mock(spec=overpy.Result)
+        mock_way = Mock(spec=overpy.Way)
+        mock_way.id = 456
+        mock_way.get_nodes.return_value = [self.mock_node]
+        mock_result.ways = [mock_way]
+        self.data_fetcher.result = mock_result
+
+        mapping = self.data_fetcher.get_nodes_on_ways()
+        expected = {456: []}
+
+        self.assertEqual(expected, mapping)
 
     def test_get_ways(self):
         mock_result = Mock(spec=overpy.Result)
@@ -37,7 +50,7 @@ class DataFetcherTestCase(unittest.TestCase):
 
         ways = self.data_fetcher.get_ways()
 
-        self.assertEqual(ways, [])
+        self.assertEqual([], ways)
 
     def test_get_centre(self):
         mock_centre = Mock(spec=overpy.Result)
@@ -46,4 +59,4 @@ class DataFetcherTestCase(unittest.TestCase):
 
         centre = self.data_fetcher.get_centre()
 
-        self.assertEqual(centre, (0.5, 0.6))
+        self.assertEqual((0.5, 0.6), centre)
