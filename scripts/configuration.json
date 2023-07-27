@@ -1,6 +1,6 @@
 {
 	"area": "StAndrews",
-	"threshold": 0.15,
+	"threshold": 0.23,
 	"neighbourEps": 0.0005,
 	"strategies": {
 		"overall": true,

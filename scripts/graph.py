@@ -44,7 +44,7 @@ class GraphProcessing:
                 dist = distance
                 shortest_path = path
         shortest_path_edges = [(shortest_path[i], shortest_path[i + 1]) for i in range(len(shortest_path) - 1)]
-        return dist, shortest_path_edges
+        return dist, self.trim_path(shortest_path_edges, from_region, to_region)
 
     def shortest_path_town_centre(self, from_region: Set[int], to_region: Set[int]):
         """
@@ -55,7 +55,7 @@ class GraphProcessing:
         node_to = min(to_region, key=lambda n: math.dist(self.layout[n], self.centre))
         dist, shortest_path = nx.single_source_dijkstra(self.graph_complete, node_from, node_to, weight='length')
         shortest_path_edges = [(shortest_path[i], shortest_path[i + 1]) for i in range(len(shortest_path) - 1)]
-        return dist, shortest_path_edges
+        return dist, self.trim_path(shortest_path_edges, from_region, to_region)
 
     def shortest_path_local_centre(self, from_region: Set[int], to_region: Set[int]):
         """
@@ -67,7 +67,15 @@ class GraphProcessing:
         node_to = min(to_region, key=lambda n: math.dist(self.layout[n], centre_to))
         dist, shortest_path = nx.single_source_dijkstra(self.graph_complete, node_from, node_to, weight='length')
         shortest_path_edges = [(shortest_path[i], shortest_path[i + 1]) for i in range(len(shortest_path) - 1)]
-        return dist, shortest_path_edges
+        return dist, self.trim_path(shortest_path_edges, from_region, to_region)
+
+    @staticmethod
+    def trim_path(path: List[Tuple[int, int]], from_region: Set[int], to_region: Set[int]):
+        enum_edges = list(enumerate(path))
+        edges_in_from = [(i, edge) for (i, edge) in enum_edges if edge[0] in from_region and edge[1] not in from_region]
+        edges_in_to = [(i, edge) for (i, edge) in enum_edges if edge[0] not in to_region and edge[1] in to_region]
+        start, end = edges_in_from[-1][0], edges_in_to[0][0]
+        return path[start:end + 1]
 
     def get_connected_components(self) -> List[Set[int]]:
         return sorted(nx.connected_components(self.graph), key=self.__group_area, reverse=True)
