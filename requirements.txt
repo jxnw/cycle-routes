@@ -1,6 +1,6 @@
+geopy
 ipykernel
 matplotlib
 networkx
 overpy
 scipy
-shapely

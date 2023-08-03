@@ -1,11 +1,10 @@
-import math
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
+from geopy import distance
 from matplotlib import colormaps
 from scripts.model import Model
-from shapely import area, Polygon
-from typing import List, Set, Tuple
+from typing import Dict, List, Set, Tuple
 
 
 class GraphProcessing:
@@ -22,15 +21,19 @@ class GraphProcessing:
         self.graph_complete = nx.Graph(adj_list_complete)
         self.graph = nx.Graph(adj_list)
 
-        edge_length = {edge: self.__get_edge_length(edge) for edge in self.graph_complete.edges}
+        self.edge_length = {edge: self.get_edge_length(edge) for edge in self.graph_complete.edges}
         nx.set_node_attributes(self.graph_complete, self.layout, 'pos')
-        nx.set_edge_attributes(self.graph_complete, edge_length, 'length')
+        nx.set_edge_attributes(self.graph_complete, self.edge_length, 'length')
         nx.set_node_attributes(self.graph, self.layout, 'pos')
-        nx.set_edge_attributes(self.graph, edge_length, 'length')
+        nx.set_edge_attributes(self.graph, self.edge_length, 'length')
 
         self.connect_close_nodes()
         sorted_groups = self.get_connected_components()
         self.largest_groups = [sorted_groups[0], sorted_groups[1]]
+
+        if self.config.zero_cost:
+            self.edge_length = self.update_edge_length(self.edge_length)
+            nx.set_edge_attributes(self.graph_complete, self.edge_length, 'length')
 
     def shortest_path_overall(self, from_region: Set[int], to_region: Set[int]):
         """
@@ -39,20 +42,20 @@ class GraphProcessing:
         dist = float('inf')
         shortest_path = []
         for target in to_region:
-            distance, path = nx.multi_source_dijkstra(self.graph_complete, from_region, target=target, weight='length')
-            if distance < dist:
-                dist = distance
+            dist_temp, path = nx.multi_source_dijkstra(self.graph_complete, from_region, target=target, weight='length')
+            if dist_temp < dist:
+                dist = dist_temp
                 shortest_path = path
         shortest_path_edges = [(shortest_path[i], shortest_path[i + 1]) for i in range(len(shortest_path) - 1)]
-        return dist, self.trim_path(shortest_path_edges, from_region, to_region)
+        return dist, shortest_path_edges
 
     def shortest_path_town_centre(self, from_region: Set[int], to_region: Set[int]):
         """
         Find the shortest path between the central node in from_region and the central node in to_region,
         where the central node in a region is the node nearest to the centre of the town.
         """
-        node_from = min(from_region, key=lambda n: math.dist(self.layout[n], self.centre))
-        node_to = min(to_region, key=lambda n: math.dist(self.layout[n], self.centre))
+        node_from = min(from_region, key=lambda n: self.get_geodesic_distance(self.layout[n], self.centre))
+        node_to = min(to_region, key=lambda n: self.get_geodesic_distance(self.layout[n], self.centre))
         dist, shortest_path = nx.single_source_dijkstra(self.graph_complete, node_from, node_to, weight='length')
         shortest_path_edges = [(shortest_path[i], shortest_path[i + 1]) for i in range(len(shortest_path) - 1)]
         return dist, self.trim_path(shortest_path_edges, from_region, to_region)
@@ -63,30 +66,19 @@ class GraphProcessing:
         where the central node in a region is the node nearest to the centre of the region.
         """
         centre_from, centre_to = self.get_centre_of_nodes(from_region), self.get_centre_of_nodes(to_region)
-        node_from = min(from_region, key=lambda n: math.dist(self.layout[n], centre_from))
-        node_to = min(to_region, key=lambda n: math.dist(self.layout[n], centre_to))
+        node_from = min(from_region, key=lambda n: self.get_geodesic_distance(self.layout[n], centre_from))
+        node_to = min(to_region, key=lambda n: self.get_geodesic_distance(self.layout[n], centre_to))
         dist, shortest_path = nx.single_source_dijkstra(self.graph_complete, node_from, node_to, weight='length')
         shortest_path_edges = [(shortest_path[i], shortest_path[i + 1]) for i in range(len(shortest_path) - 1)]
         return dist, self.trim_path(shortest_path_edges, from_region, to_region)
 
-    @staticmethod
-    def trim_path(path: List[Tuple[int, int]], from_region: Set[int], to_region: Set[int]):
-        enum_edges = list(enumerate(path))
-        edges_in_from = [(i, edge) for (i, edge) in enum_edges if edge[0] in from_region and edge[1] not in from_region]
-        edges_in_to = [(i, edge) for (i, edge) in enum_edges if edge[0] not in to_region and edge[1] in to_region]
-        start, end = edges_in_from[-1][0], edges_in_to[0][0]
-        return path[start:end + 1]
-
     def get_connected_components(self) -> List[Set[int]]:
-        return sorted(nx.connected_components(self.graph), key=self.__group_area, reverse=True)
+        return sorted(nx.connected_components(self.graph), key=self.group_size, reverse=True)
 
     def get_centre_of_nodes(self, nodes: Set[int]) -> Tuple[float, float]:
         g = nx.subgraph(self.graph, nodes)
         centre = list(nx.center(g, weight='length'))[0]
         return self.layout[centre]
-
-    def add_edges_to_graph(self, edges: List[Tuple[int, int]]):
-        self.graph.add_edges_from(edges)
 
     def display(self, subgraph: List[Set[int]] = None, filepath=None):
         fig, ax = plt.subplots()
@@ -118,23 +110,37 @@ class GraphProcessing:
 
     def connect_close_nodes(self):
         new_edges = nx.geometric_edges(self.graph, radius=self.config.neighbour_eps)
-        self.graph.add_edges_from(new_edges)
+        self.graph.add_edges_from(new_edges, length=self.config.neighbour_eps)
         new_edges = nx.geometric_edges(self.graph_complete, radius=self.config.neighbour_eps)
-        self.graph_complete.add_edges_from(new_edges)
+        self.graph_complete.add_edges_from(new_edges, length=self.config.neighbour_eps)
 
-    def __group_area(self, group: Set[int]):
-        coordinates = [self.layout.get(node_id) for node_id in group]
-        south = min(coordinates, key=lambda x: x[1])
-        west = min(coordinates, key=lambda x: x[0])
-        north = max(coordinates, key=lambda x: x[1])
-        east = max(coordinates, key=lambda x: x[0])
-        bbox: List[Tuple[float, float]] = [south, west, north, east]
-        return area(Polygon(bbox))
+    def group_size(self, group: Set[int]):
+        subgraph = self.graph.subgraph(group)
+        size = 0
+        for edge in subgraph.edges:
+            size += subgraph.get_edge_data(*edge)['length']
+        return size
 
-    def __get_edge_length(self, edge: Tuple[int, int]):
-        if self.config.zero_cost and edge in self.graph.edges:
-            return 0
-        return math.dist(self.layout[edge[0]], self.layout[edge[1]]) * 10000
+    def update_edge_length(self, edge_length: Dict[Tuple[int, int], float]):
+        for edge in edge_length.keys():
+            if edge in self.graph.edges:
+                edge_length[edge] = 0
+        return edge_length
 
-    def __get_geometric_edges(self, graph) -> List[Tuple[int, int]]:
+    def get_edge_length(self, edge: Tuple[int, int]):
+        return self.get_geodesic_distance(self.layout[edge[0]], self.layout[edge[1]])
+
+    def get_geometric_edges(self, graph) -> List[Tuple[int, int]]:
         return nx.geometric_edges(graph, radius=self.config.neighbour_eps)
+
+    @staticmethod
+    def get_geodesic_distance(pos1: Tuple[float, float], pos2: Tuple[float, float]):
+        return distance.distance(tuple(reversed(pos1)), tuple(reversed(pos2))).km
+
+    @staticmethod
+    def trim_path(path: List[Tuple[int, int]], from_region: Set[int], to_region: Set[int]):
+        enum_edges = list(enumerate(path))
+        edges_in_from = [(i, edge) for (i, edge) in enum_edges if edge[0] in from_region and edge[1] not in from_region]
+        edges_in_to = [(i, edge) for (i, edge) in enum_edges if edge[0] not in to_region and edge[1] in to_region]
+        start, end = edges_in_from[-1][0], edges_in_to[0][0]
+        return path[start:end + 1]
