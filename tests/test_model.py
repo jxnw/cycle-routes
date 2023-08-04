@@ -17,6 +17,16 @@ class ModelTestCase(unittest.TestCase):
         self.mock_data_fetcher.config = self.mock_config
         self.model = Model(self.mock_data_fetcher)
 
+    def test_get_node_pos(self):
+        adj_list = {123: [], 456: []}
+        self.model.get_node_pos(adj_list)
+        self.mock_data_fetcher.get_node_pos_by_ids.assert_called_once_with([123, 456])
+
+    def test_get_node_pos_empty(self):
+        adj_list = {}
+        self.model.get_node_pos(adj_list)
+        self.mock_data_fetcher.get_node_pos_by_ids.assert_called_once_with([])
+
     def test_eval_way_one_tag(self):
         weighted_tags = WeightedTags({
             'tag': {

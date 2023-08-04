@@ -3,6 +3,7 @@ import json
 import os
 from scripts.config import Config
 from scripts.data_fetcher import DataFetcher
+from scripts.exception import NoSuggestedPathException
 from scripts.model import Model
 from scripts.graph import GraphProcessing
 
@@ -22,30 +23,34 @@ def main():
 
     data_fetcher = DataFetcher(config)
     model = Model(data_fetcher)
-    graph_processing = GraphProcessing(model)
+    graph = GraphProcessing(model)
 
-    largest_components = graph_processing.largest_groups
-    region_from, region_to = largest_components
+    try:
+        largest_components = graph.preprocessing()
+    except NoSuggestedPathException as e:
+        print(e)
+        graph.display(filepath=os.path.join(root, args.save, 'cycle_friendly.png'))
+    else:
+        graph.display(filepath=os.path.join(root, args.save, 'cycle_friendly.png'))
+        graph.display(largest_components, filepath=os.path.join(root, args.save, 'components.png'))
 
-    graph_processing.display(filepath=os.path.join(root, args.save, 'cycle_friendly.png'))
-    graph_processing.display(largest_components, filepath=os.path.join(root, args.save, 'components.png'))
+        region_from, region_to = largest_components
+        strategies = config.strategies
 
-    strategies = config.strategies
+        if strategies.get('overall', False):
+            dist, path = graph.shortest_path_overall(region_from, region_to)
+            graph.display_path_between_subgraph(path, region_from, region_to,
+                                                filepath=os.path.join(root, args.save, 'path_overall.png'))
 
-    if strategies.get('overall', False):
-        dist, path = graph_processing.shortest_path_overall(region_from, region_to)
-        graph_processing.display_path_between_subgraph(path, region_from, region_to,
-                                                       filepath=os.path.join(root, args.save, 'path_overall.png'))
+        if strategies.get('centreTown', False):
+            dist, path = graph.shortest_path_town_centre(region_from, region_to)
+            graph.display_path_between_subgraph(path, region_from, region_to,
+                                                filepath=os.path.join(root, args.save, 'path_town_centre.png'))
 
-    if strategies.get('centreTown', False):
-        dist, path = graph_processing.shortest_path_town_centre(region_from, region_to)
-        graph_processing.display_path_between_subgraph(path, region_from, region_to,
-                                                       filepath=os.path.join(root, args.save, 'path_town_centre.png'))
-
-    if strategies.get('centreLocal', False):
-        dist, path = graph_processing.shortest_path_local_centre(region_from, region_to)
-        graph_processing.display_path_between_subgraph(path, region_from, region_to,
-                                                       filepath=os.path.join(root, args.save, 'path_local_centre.png'))
+        if strategies.get('centreLocal', False):
+            dist, path = graph.shortest_path_local_centre(region_from, region_to)
+            graph.display_path_between_subgraph(path, region_from, region_to,
+                                                filepath=os.path.join(root, args.save, 'path_local_centre.png'))
 
 
 if __name__ == '__main__':

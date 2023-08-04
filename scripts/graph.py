@@ -3,6 +3,7 @@ import networkx as nx
 import numpy as np
 from geopy import distance
 from matplotlib import colormaps
+from scripts.exception import NoSuggestedPathException
 from scripts.model import Model
 from typing import Dict, List, Set, Tuple
 
@@ -13,27 +14,38 @@ class GraphProcessing:
         self.config = model.config
         self.centre = model.centre
 
-        adj_list_complete = self.model.get_adj_list(threshold=0)
+        adj_list_unfiltered = self.model.get_adj_list(threshold=0)
         adj_list = self.model.get_adj_list()
 
-        self.layout = self.model.get_node_pos(adj_list_complete)
+        self.layout = self.model.get_node_pos(adj_list_unfiltered)
 
-        self.graph_complete = nx.Graph(adj_list_complete)
+        self.graph_unfiltered = nx.Graph(adj_list_unfiltered)
         self.graph = nx.Graph(adj_list)
 
-        self.edge_length = {edge: self.get_edge_length(edge) for edge in self.graph_complete.edges}
-        nx.set_node_attributes(self.graph_complete, self.layout, 'pos')
-        nx.set_edge_attributes(self.graph_complete, self.edge_length, 'length')
+    def preprocessing(self):
+        edge_length = {edge: self.get_edge_length(edge) for edge in self.graph_unfiltered.edges}
+        nx.set_node_attributes(self.graph_unfiltered, self.layout, 'pos')
+        nx.set_edge_attributes(self.graph_unfiltered, edge_length, 'length')
         nx.set_node_attributes(self.graph, self.layout, 'pos')
-        nx.set_edge_attributes(self.graph, self.edge_length, 'length')
+        nx.set_edge_attributes(self.graph, edge_length, 'length')
 
         self.connect_close_nodes()
         sorted_groups = self.get_connected_components()
-        self.largest_groups = [sorted_groups[0], sorted_groups[1]]
 
         if self.config.zero_cost:
-            self.edge_length = self.update_edge_length(self.edge_length)
-            nx.set_edge_attributes(self.graph_complete, self.edge_length, 'length')
+            edge_length = self.set_zero_cost(edge_length)
+            nx.set_edge_attributes(self.graph_unfiltered, edge_length, 'length')
+
+        if len(sorted_groups) >= 2:
+            return [sorted_groups[0], sorted_groups[1]]
+        else:
+            raise NoSuggestedPathException('Graph is fully connected!')
+
+    def set_zero_cost(self, edge_length: Dict[Tuple[int, int], float]):
+        for edge in edge_length.keys():
+            if edge in self.graph.edges:
+                edge_length[edge] = 0
+        return edge_length
 
     def shortest_path_overall(self, from_region: Set[int], to_region: Set[int]):
         """
@@ -42,7 +54,7 @@ class GraphProcessing:
         dist = float('inf')
         shortest_path = []
         for target in to_region:
-            dist_temp, path = nx.multi_source_dijkstra(self.graph_complete, from_region, target=target, weight='length')
+            dist_temp, path = nx.multi_source_dijkstra(self.graph_unfiltered, from_region, target=target, weight='length')
             if dist_temp < dist:
                 dist = dist_temp
                 shortest_path = path
@@ -56,7 +68,7 @@ class GraphProcessing:
         """
         node_from = min(from_region, key=lambda n: self.get_geodesic_distance(self.layout[n], self.centre))
         node_to = min(to_region, key=lambda n: self.get_geodesic_distance(self.layout[n], self.centre))
-        dist, shortest_path = nx.single_source_dijkstra(self.graph_complete, node_from, node_to, weight='length')
+        dist, shortest_path = nx.single_source_dijkstra(self.graph_unfiltered, node_from, node_to, weight='length')
         shortest_path_edges = [(shortest_path[i], shortest_path[i + 1]) for i in range(len(shortest_path) - 1)]
         return dist, self.trim_path(shortest_path_edges, from_region, to_region)
 
@@ -68,7 +80,7 @@ class GraphProcessing:
         centre_from, centre_to = self.get_centre_of_nodes(from_region), self.get_centre_of_nodes(to_region)
         node_from = min(from_region, key=lambda n: self.get_geodesic_distance(self.layout[n], centre_from))
         node_to = min(to_region, key=lambda n: self.get_geodesic_distance(self.layout[n], centre_to))
-        dist, shortest_path = nx.single_source_dijkstra(self.graph_complete, node_from, node_to, weight='length')
+        dist, shortest_path = nx.single_source_dijkstra(self.graph_unfiltered, node_from, node_to, weight='length')
         shortest_path_edges = [(shortest_path[i], shortest_path[i + 1]) for i in range(len(shortest_path) - 1)]
         return dist, self.trim_path(shortest_path_edges, from_region, to_region)
 
@@ -111,8 +123,8 @@ class GraphProcessing:
     def connect_close_nodes(self):
         new_edges = nx.geometric_edges(self.graph, radius=self.config.neighbour_eps)
         self.graph.add_edges_from(new_edges, length=self.config.neighbour_eps)
-        new_edges = nx.geometric_edges(self.graph_complete, radius=self.config.neighbour_eps)
-        self.graph_complete.add_edges_from(new_edges, length=self.config.neighbour_eps)
+        new_edges = nx.geometric_edges(self.graph_unfiltered, radius=self.config.neighbour_eps)
+        self.graph_unfiltered.add_edges_from(new_edges, length=self.config.neighbour_eps)
 
     def group_size(self, group: Set[int]):
         subgraph = self.graph.subgraph(group)
@@ -120,12 +132,6 @@ class GraphProcessing:
         for edge in subgraph.edges:
             size += subgraph.get_edge_data(*edge)['length']
         return size
-
-    def update_edge_length(self, edge_length: Dict[Tuple[int, int], float]):
-        for edge in edge_length.keys():
-            if edge in self.graph.edges:
-                edge_length[edge] = 0
-        return edge_length
 
     def get_edge_length(self, edge: Tuple[int, int]):
         return self.get_geodesic_distance(self.layout[edge[0]], self.layout[edge[1]])

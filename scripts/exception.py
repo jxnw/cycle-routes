@@ -1,0 +1,2 @@
+class NoSuggestedPathException(Exception):
+    pass

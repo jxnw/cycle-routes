@@ -7,7 +7,7 @@
 		"centreTown": true,
 		"centreLocal": true
 	},
-	"zeroCostExistingPath": true,
+	"zeroCostExistingPath": false,
 	"boundingBoxes": {
 		"StAndrews": {
 			"nodeId": 21511530,
