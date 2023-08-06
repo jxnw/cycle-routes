@@ -1,0 +1,46 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{parskip}
+\usepackage{amsmath}
+\usepackage{url}
+
+\title{DOER Report}
+\author{190005675}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section{Description}
+This project aims to improve the cycling infrastructure in St Andrews. Many people in St Andrews travel by bike, but it can be difficult to get around. With limited budgets for infrastructure improvements, it is especially important to spend money efficiently.
+
+By analysing the data from OpenStreetMap\footnote{\url{https://www.openstreetmap.org/#map=15/56.3349/-2.8006&layers=Y}}, we will construct an annotated graph of the roads and cycle lanes in the town. Each path will contain information relating to its cycle-friendliness, which we can use for data processing.
+
+We will use a set of heuristics to create a cycle-friendly subgraph, from which it will be possible to use standard graph theory techniques to find disconnected components. Then, we will be able to identify which routes could be added or improved in order to increase the connectedness of the cycle-friendly area. The tool could be useful for town planners when they decide where they should allocate their cycle path budget.
+
+\section{Objectives}
+
+\subsection{Primary Objectives}
+\begin{enumerate}
+    \item Develop an automated process that turns the OpenStreetMap data for an area into a graph annotated with data relevant to cycle accessibility and apply this to St Andrews
+    \item Develop a set of configurable heuristics to determine whether a route is cycle friendly
+    \item Apply the heuristics to highlight disconnected components in the cycle-friendly subgraph
+    \item Consider other properties of the graph, such as k-connectivity and induced subgraphs, to produce other findings relevant to cycling
+    \item Suggest the most efficient paths to add to increase the connectedness of the subgraph
+\end{enumerate}
+
+\subsection{Secondary Objectives}
+\begin{enumerate}
+    \item Apply this analysis process to another similar area and assess how well the automated process works for areas it was not designed for
+    \item Apply the analysis process to a larger area to evaluate the scalability of the technique
+    \item Consider the cost of adding new paths when making suggestions
+\end{enumerate}
+
+\section{Ethics}
+Since we are not planning to work with people or sensitive private data, there are no ethical concerns. The OpenStreetMap data is available under a Open Data Commons Open Database License\footnote{\url{https://www.openstreetmap.org/copyright}} so it can be freely used so long as it is given proper attribution.
+
+\section{Resources}
+This project should not require any special resources.
+
+\end{document}

@@ -161,3 +161,14 @@ cython_debug/
 
 .DS_Store
 notebooks/
+
+## Bibliography auxiliary files (bibtex/biblatex/biber):
+*.bbl
+
+## Build tool auxiliary files:
+*.fdb_latexmk
+*.synctex
+*.synctex(busy)
+*.synctex.gz
+*.synctex.gz(busy)
+*.pdfsync

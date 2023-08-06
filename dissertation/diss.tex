@@ -1,0 +1,712 @@
+\documentclass[12pt,a4paper]{report}
+\usepackage[utf8]{inputenc}
+\usepackage{parskip}
+\usepackage{amsmath}
+\usepackage{url}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{algorithm}  % algorithm
+\usepackage{algpseudocode}  % algorithm
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+
+\usepackage{graphicx}
+\graphicspath{ {./plan_images/} }
+
+\begin{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Title
+%TC:ignore
+\pagestyle{empty}
+\pagenumbering{gobble}
+
+\vspace*{60mm}
+\begin{center}
+\Huge
+\textbf{Cycle routes: connecting the network}
+
+\vfill
+\large
+Jiaxin Wang \\[3mm]
+Supervisor: Dr Michael Young \\[3mm]
+University of St Andrews \\[3mm]
+\today  % today's date
+\end{center}
+\thispagestyle{empty}
+
+\pagestyle{plain}
+\chapter*{Abstract}
+
+\chapter*{Declaration}
+I declare that the material submitted for assessment is my own work except where credit is explicitly given to others by citation or acknowledgement. This work was performed during the current academic year except where otherwise stated.
+
+The main text of this project report is NN,NNN words long, including project specification and plan.
+
+In submitting this project report to the University of St Andrews, I give permission for it to be made available for use in accordance with the regulations of the University Library. I also give permission for the title and abstract to be published and for copies of the report to be made and supplied at cost to any bona fide library or research worker, and to be made available on the World Wide Web. I retain the copyright in this work.
+
+\clearpage
+\setcounter{page}{1}
+\pagenumbering{roman}
+
+\tableofcontents
+
+\listoffigures
+
+\newpage
+\pagenumbering{arabic}
+%TC:endignore
+
+\chapter{Introduction}
+In this chapter, we would discuss the motivation behind this project. We would present a list of aims and objectives, and give a brief overview of the structure of this report.
+
+\section{Motivation}
+With the climate crisis, there has been a big push from many facets of society to reduce car usage~\cite{CHAPMAN2007354}. Encouraging more people to cycle over short distances instead of driving would be a big step towards reaching that goal. A study by Sloman et al. suggests that investment in cycling leads to increased cycle levels~\cite{Sloman2009}. Many cities and towns have invested money into creating new cycling infrastructure, such as cycle paths alongside roads or standalone cycleways. Public budgets are always squeezed, so it is important to prioritize infrastructure improvements in the places where they would have the most impact. 
+
+Given the street map data of an area, it is possible to analyse the existing cycle infrastructure and identify the places where improvement is most needed. For each path in the street map, we can evaluate its suitability for safe cycling using data such as speed limits and cycle lanes. For example, a designated cycle lane is considered to be more cycle-friendly than a busy main road. If we consider the subgraph which consists of cycle-friendly paths only, we could potentially identify isolated areas that are disconnected from the rest of the graph. It might be safe to cycle within each area, but it could be difficult for cyclists to commute from one area to another. An improvement to the cycle network would be to add cycle-friendly paths to connect such areas.
+
+There are many network analysis tools implemented in various programming languages, but users without any technical expertise could struggle to apply such tools to the map data. There is a need for a system which allows less technical users to analyse street maps with respect to cycling infrastructure.
+
+\section{Aims and Objectives} \label{sec:aims}
+The aim of this project is to implement an automated system which provides recommendations for additional cycle paths by analysing the map of St Andrews. The system should be extensible to other areas without any manual data processing.
+
+The primary objectives are listed below:
+\begin{enumerate}
+    \item Develop an automated process that turns the OpenStreetMap data for an area into a graph annotated with data relevant to cycle accessibility and apply this to St Andrews
+    \item Develop a set of configurable heuristics to determine whether a route is cycle friendly
+    \item Apply the heuristics to highlight disconnected components in the cycle-friendly subgraph
+    \item Consider other properties of the graph, such as k-connectivity and induced subgraphs, to produce other findings relevant to cycling
+    \item Suggest the most efficient paths to add to increase the connectedness of the subgraph
+\end{enumerate}
+
+A list of secondary objectives are considered, with lower priority than the primary objectives:
+\begin{enumerate}
+    \item Apply this analysis process to another similar area and assess how well the automated process works for areas it was not designed for
+    \item Apply the analysis process to a larger area to evaluate the scalability of the technique
+    \item Consider the cost of adding new paths when making suggestions
+\end{enumerate}
+
+\section{Report Structure}
+Chapter \ref{chapter:context} gives an overview of graph theory which is relevant to this project and related work in this area. Chapter \ref{chapter:design} concerns the structure of the system. The implementation of the system is discussed in Chapter \ref{chapter:impl}, with focus on high-level algorithms. In Chapter \ref{chapter:eval}, we evaluate the success and limitations of the system and compare it against existing approaches. Chapter \ref{chapter:concl} summarizes the project and discusses potential future work.
+
+\chapter{Context Survey}\label{chapter:context}
+This project is closely related to graph theory, and research has been done in this field. In Section \ref{sec:graph_theory}, we would look into some important concepts in graph theory. Section \ref{sec:related_work} gives an overview of related work in this area. Tools and libraries that may be relevant to this project are discussed.
+
+\section{Graph Theory} \label{sec:graph_theory}
+A \textit{graph} $G=(V,E)$ is a mathematical structure which consists of a set of vertices $V$ and a set of edges $E$, where each edge is a pair of vertices in $V$~\cite{chartrand}. A graph $H$ is called a \textit{subgraph} of $G$ if $V(H) \subseteq V(G)$ and $V(H) \subseteq V(G)$. A \textit{weighted} graph is a graph where each edge is assigned a weight value. A \textit{directed} graph is a graph where each edge is directed, whereas an \textit{undirected} graph is a graph where edges have no direction. A \textit{hypergraph} is denoted by $H=(V;\mathcal{E})$, where $V$ is a set of vertices and $\mathcal{E}$ is a set of hyperedges. Each hyperedge joins any number of vertices.
+
+\begin{figure}[ht]
+    \centering
+    \begin{subfigure}[ht]{0.33\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{plan_images/weighted.png}
+        \caption{A weighted graph}
+        \label{fig:weighted}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[ht]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{plan_images/directed.png}
+        \caption{A directed graph}
+        \label{fig:directed}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[ht]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{plan_images/undirected.png}
+        \caption{An undirected graph}
+        \label{fig:undirected}
+    \end{subfigure}
+       \caption{Three simple graphs}
+       \label{fig:three graphs}
+\end{figure}
+
+Three simple graphs are demonstrated in Figure~\ref{fig:three graphs}. Figure~\ref{fig:weighted} shows a weighted graph with $V = \{A, B, C, D\}$ and $E = \{AC, BC, CD\}$, where the weight of each edge is labelled next to the edge. An example of a directed graph and an undirected graph are shown in Figure~\ref{fig:directed} and \ref{fig:undirected} respectively. Figure~\ref{fig:fanoplane} shows the Fano plane, which is an example of a hypergraph. It contains seven vertices as labelled on the diagram, and it has seven hyperedges: $\mathcal{E} = \{123, 145, 167, 246, 257, 347, 365\}$.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.3\textwidth]{plan_images/fanoplane.png}
+    \caption{The Fano plane from Wikipedia~\cite{WikipediaEN:fanoplane}}
+    \label{fig:fanoplane}
+\end{figure}
+
+Street maps can be considered as a type of hypergraph, where locations on the map are the vertices and streets joining various locations are the hyperedges. However, most implementations of graph algorithms are designed for graphs instead of hypergraphs. If we create a graph from the street map hypergraph, we can analyse the subgraph which only consists of cycle-friendly routes and identify isolated areas in the subgraph, where there are no connecting edges between the isolated area and other parts of the graph. In the following sections, we present some graph algorithms which can be useful in our task.
+
+\subsection{Connectivity}
+The \textit{vertex-connectivity} of a graph is defined as the minimum number of vertices that need to be removed to result in a disconnected graph, and the \textit{edge-connectivity} of a graph is the minimum number of edges that need to be removed to result in a disconnected graph~\cite{buckley1990distance}. A graph is \textit{k-vertex-connected} if it has vertex-connectivity $k$.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.25\textwidth]{plan_images/connectivity.png}
+    \caption{A 4-connected graph from Wikipedia~\cite{WikipediaEN:Connectivity}}
+    \label{fig:connectivity4}
+\end{figure}
+
+Figure~\ref{fig:connectivity4} shows a 4-vertex-connected graph. To separate the graph into two isolated subgraphs, the minimum number of vertices that need to be removed is four. For example, after removing the two left-most vertices and the two right-most vertices, we obtain two disconnected subgraphs, each of which consists of one vertex and no edges. 
+
+The more connected the cycle-friendly subgraph is, the easier it is to get around the area with bicycles. An intuition to improve the cycle infrastructure would be to add paths that would increase the connectivity of the graph.
+
+\subsection{Graph traversal}
+If a graph $S$ is a maximal connected subgraph of graph $G$, then $S$ is a $component$ of $G$~\cite{citeulike:395714}. We can analyse the connected components in the cycle-friendly graph and add edges between them to connect smaller cycle-friendly regions into a large cycle-friendly component. The set of components in an undirected graph can be found by traversing the graph. Running a search from a node $n$ will give us all the reachable nodes from $n$, which form a component containing $n$. Therefore, running search algorithms from each unvisited node will yield the set of connected components in a graph.
+
+There are two common examples of search algorithms, namely \textit{breadth-first search} (BFS) and \textit{depth-first search} (DFS). The BFS algorithm works by visiting each node in turn, starting with the closest nodes to origin and keeping the unvisited neighbours in a queue. The DFS algorithm runs in the same way, except it uses a stack to explore each branch in full before backtracking.
+
+\subsection{Shortest path}
+In order to measure the cost of cycling, we can look at the cost of the shortest paths. There are many algorithms for finding the shortest paths between nodes in a graph, perhaps the most famous of which is Dijkstra's shortest path algorithm~\cite{dijkstra1959note}. It takes a starting point and works out the shortest path to all other reachable nodes. The algorithm is outlined in Algorithm~\ref{alg:dijkstra}~\cite{WikipediaEN:dijkstra}.
+
+\begin{algorithm}
+\caption{Dijkstra's Algorithm}\label{alg:dijkstra}
+\begin{algorithmic}
+\Function{Dijkstra}{Graph, source}
+    \For{$v$ in $Graph.Vertices$}
+        \State $dist[v]\gets \infty$
+        \State $prev[v]\gets undefined$
+        \State add $v$ to $Q$
+    \EndFor
+    \State $dist[source]\gets 0$
+    \While{$Q$ is not empty}
+        \State $u\gets$ vertex in $Q$ with min $dist[u]$
+        \State remove $u$ from $Q$
+        \For{neighbour $v$ of $u$ still in $Q$}
+            \State $alt \gets dist[u] + Graph.Edges(u, v)$
+            \If{$alt < dist[v]$}
+                \State $dist[v]\gets alt$
+                \State $prev[v]\gets u$
+            \EndIf
+        \EndFor
+    \EndWhile
+    \State \Return $dist, prev$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+Consider the graph in Figure~\ref{fig:dijkstra_example}~\cite{abba2022}, we can use Dijkstra's algorithm to find the shortest distance from node A to every other node. During the process, we would keep a priority queue, which stores the shortest distance so far to a node from node A, with the smallest distance being at the front of the queue. After visiting the node A, the priority queue would look like this:
+\[C=2, B=4, D=\infty, E=\infty\]
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.5\textwidth]{plan_images/dijkstra.png}
+\caption{An undirected graph taken from freeCodeCamp~\cite{abba2022}}
+\label{fig:dijkstra_example}
+\end{figure}
+
+This is because the shortest distance from A to B is 4, from A to C is 2. Then we choose a new unvisited node from the front of the priority queue, in this case, C. After visiting the node C, we can update the priority queue:
+\[B=3, D=\infty, E=\infty\]
+
+C is now visited, so it is removed from the priority queue. Since $2+1 \leq 4$, the shortest distance between AB is updated to be 3. The next node to be visited is B, which is at the front of the priority queue. After visiting B, we have:
+\[E=5, D=6\]
+
+And after visiting E, we have:
+\[D=6\]
+
+Finally, D is visited and there are no unvisited nodes left. We have computed that the shortest distance from A to every other node:
+\[B=3, C=2, D=6, E=5\]
+
+Another famous graph algorithm is Prim's algorithm, which finds the minimum spanning tree for a weighted undirected graph. The minimum spanning tree of a graph is defined to be the tree with the minimum total edge weights which connects all vertices~\cite{Pettie2008}. An example of a minimum spanning tree is shown in Figure~\ref{fig:mst_example}. In our task of improving the cycling infrastructure, we can use it to identify the paths that connect all areas with the lowest total distance and improve the graph based on this metric.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.5\textwidth]{plan_images/MST.png}
+\caption{A minimum spanning tree example from Wikipedia~\cite{WikipediaEN:MST}}
+\label{fig:mst_example}
+\end{figure}
+
+\section{Related Work} \label{sec:related_work}
+\subsection{OpenStreetMap}
+OpenStreetMap~\cite{OpenStreetMap} is an open, user-generated map database. It is licensed under the Open Data Commons Open Database Licence~\cite{odbl}. There are four types of data in OSM~\cite{9119753}:
+\begin{itemize}
+    \item A node, which is a location on the Earth's surface with longitude and latitude
+    \item A way, which is an ordered list of nodes representing roads and objects along the road
+    \item A relation, which specifies the association among objects
+    \item A tag, which is a key-value pair regarding information about an object
+\end{itemize}
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=0.8\textwidth,trim={22cm 10cm 0 0},clip]{plan_images/osm.png}
+\caption{CyclOSM of St Andrews}
+\label{fig:osm_sta}
+\end{figure}
+
+\begin{figure}[ht!]
+\centering
+\includegraphics[width=0.8\textwidth,trim={10cm 0 10cm 5cm},clip]{plan_images/googlemap.png}
+\caption{Google map of St Andrews}
+\label{fig:google_sta}
+\end{figure}
+
+Figure~\ref{fig:osm_sta} shows the map of St Andrews in CyclOSM~\cite{cycleOSM}, a bicycle map based on OpenStreetMap. It highlights bicycle infrastructure such as cycleways, and it includes information about highways such as speed limits. Ferster et al. \cite{doi:10.1080/15568318.2018.1519746} compared OSM data against municipal open data in six Canadian cities and concluded that OSM data was more extensive and detailed.
+
+There are other maps that can be used to show bike lanes. For example, Google Maps (\url{https://www.google.com/maps}) is a widely used map. More than 1 billion people use it every month~\cite{ethan2019}, and by 2018 it supported 40 languages~\cite{yamagami2018}. It makes use of machine learning techniques to remove fake content and help keep the map accurate~\cite{gupta2023}. It also provides a good user interface. Figure~\ref{fig:google_sta} shows the map of St Andrews in Google Maps in the cycling layer. One advantage that google have over OpenStreetMap is that the map data is not all contributed by volunteers, so it is much easier for them to keep their data consistent.
+
+\begin{figure}[ht!]
+    \centering
+    \includegraphics[width=0.7\textwidth,trim={0 8cm 5cm 0},clip]{plan_images/feature.png}
+    \caption{Querying features in OpenStreetMap}
+    \label{fig:feature_query}
+\end{figure}
+
+\begin{figure}[ht!]
+    \centering
+    \includegraphics[width=0.7\textwidth,trim={0 5cm 5cm 0},clip]{plan_images/cycleway.png}
+    \caption{Details of Viaduct Walk}
+    \label{fig:cycleway_query}
+\end{figure}
+
+One disadvantage of Google Maps is that it is not open data. On the other hand, OpenStreetMap is open data, and it provides much more detailed information regarding bicycle infrastructure. The OpenStreetMap website~\cite{OpenStreetMap} allows users to query features at any point on the map. Figure~\ref{fig:feature_query} shows an example of queried features. Details of each feature can be viewed by clicking the blue text. For example, ``Viaduct Walk" is a link to the information page of Viaduct Walk (Figure~\ref{fig:cycleway_query}). It contains a series of tags which specify useful information such as the type of the road, whether pedestrians are allowed and whether it is one-way. It also contains a list of nodes which are on the path. Such information can be helpful for deciding whether a road is cycle-friendly.
+
+\subsection{Overpass API}
+OpenStreetMap exposes its data through an API, \textit{Overpass API}~\cite{wiki:overpass}. This API means it is feasible to automate our system. It allows nodes, ways and relations to be queried according to a well-documented query language, \textit{Overpass QL}~\cite{wiki:overpassql}. 
+
+For example, if we want to query nodes for post boxes within a certain area, the query would be
+\begin{verbatim}
+    node["amenity"="post_box"]({{bbox}});
+    out;
+\end{verbatim}
+where \texttt{bbox} is the bounding box for the area, specified by a 4-tuple \texttt{(south, west, north, east)} in longitude and latitude.
+
+We could also query each OSM element by ID. To get the information associated with Viaduct Walk as shown in Figure~\ref{fig:cycleway_query}, we could use
+\begin{verbatim}
+    way(151283936);
+    out;
+\end{verbatim}
+where 151283936 is the element ID of Viaduct Walk. This query returns the following data:
+\begin{verbatim}
+    <way id="151283936">
+        <nd ref="297685799"/>
+        <nd ref="9097834868"/>
+        <nd ref="9356781484"/>
+        <nd ref="9356781485"/>
+        <nd ref="287216154"/>
+        <nd ref="1479980590"/>
+        <nd ref="9356781486"/>
+        <nd ref="1479980462"/>
+        <nd ref="287216155"/>
+        <nd ref="985936350"/>
+        <nd ref="9356781487"/>
+        <nd ref="9356781488"/>
+        <nd ref="287216156"/>
+        <nd ref="1478202890"/>
+        <nd ref="1478202850"/>
+        <nd ref="1478203126"/>
+        <tag k="foot" v="yes"/>
+        <tag k="highway" v="cycleway"/>
+        <tag k="lcn" v="yes"/>
+        <tag k="name" v="Viaduct Walk"/>
+        <tag k="oneway" v="no"/>
+        <tag k="surface" v="asphalt"/>
+    </way>
+\end{verbatim}
+
+We have access to the list of nodes on Viaduct Walk as well as the tags associated with it. Tags such as \texttt{highway=cycleway} are likely to be helpful in deciding whether an OSM way is cycle-friendly.
+
+\subsection{Applications of Graph Theory}
+In this section, we give an overview of how graph theory has been applied to transportation problems. Erath et al.~\cite{erath2009} studied modern measures of the efficiency of transport metrics where they compared cost in the network against the straight-line distance, and showed that parts of the Swiss road network have reached growth limits, where it is hard to improve them any more owing to spatial limitations.
+
+Derrible and Kennedy~\cite{derrible2011} described the history of graph theory with respect to transportation networks, paying particular note to the development of indicators describing the properties of transportation networks. They highlight the \textit{scale-free} concept from network theory, where in some graphs the probability distribution of the number of connections a node has follows a power law and is not related to the number of edges or vertices in the graph. The process for adding cycle-friendly edges outlined in this project could promote a \textit{scale-free} cycle-friendly network, since we are more likely to add edges to vertices which already have a high number of connections. 
+
+Zargham et al.~\cite{zarghami2020} used spanning trees to quantify network reliability, another measure that may be of relevance to cyclists so they can be confident of an alternative route should there be any roadworks. They demonstrate an exact measurement of network reliability by looking at the set of all spanning trees in the graph and the probability of no failure for each spanning tree. This could be applied to road networks if we used historical data about roadworks along certain routes to estimate the probability of an edge being open.
+
+\subsection{Applications of Prim's Algorithm}
+There are many applications of Prim's algorithm. Wang et al.~\cite{wang2018} developed an algorithm based on Prim's algorithm and used it to identify natural disasters in isolated areas. Fitina et al.~\cite{fitina} discussed applying Prim's algorithm in the context of tourism in Papua New Guinea, in order to reduce the expense of travelling between the islands. Iqbal et al.~\cite{iqbal2017} used Prim's algorithm to optimize the planning of fibre optic cables to reduce the costs. We can see that Prim's algorithm is often used to find the most efficient overall routes, and we would like to improve these routes when building new cycling infrastructure. 
+
+\subsection{Software and Tools}
+Below we discuss some libraries and tools that might be relevant to our project.
+
+\subsubsection*{Overpass API}
+\texttt{overpy}~\cite{overpy} is a python wrapper to access the Overpass API. It supports querying with Overpass QL as well as parsing the response data to objects such as nodes and ways. 
+
+\subsubsection*{Graph visualization}
+\texttt{Matplotlib}~\cite{Hunter:2007} is a powerful tool for visualizing graphs in python. It was used to display the generated graphs in this project.
+
+\subsubsection*{Graph analysis}
+\texttt{NetworkX}~\cite{SciPyProceedings_11} is an open source python library for analysing graphs. It has implementations of standard graph algorithms such as graph traversal and cycle detection. Furthermore, it provides support for graph visualization with \texttt{Matplotlib}. It was used to perform graph analysis in this project.
+
+\texttt{python-igraph}~\cite{igraph} is another useful library for graph manipulation. It also comes with standard graph algorithms and supports graph plotting with either \texttt{Matplotlib} or \texttt{Cairo}~\cite{cairo} which is a graphics library.
+
+\subsubsection*{Version control and backup}
+\texttt{Git} was used for version control and the project was pushed to a private \texttt{GitHub} repository regularly so that it can be easily recovered in case of machine failure.
+
+\chapter{Design}\label{chapter:design}
+In this chapter, we describe the structure of our system and outline some important design decisions.
+
+\section{System Structure}
+The system was divided into three layers: a \textbf{data fetcher} layer, a \textbf{model} layer and a \textbf{graph} layer. The data fetcher makes queries to the Overpass API and stores the street map data returned by the API. The model evaluates cycle-friendliness of the street map data based on certain criteria and uses it to construct nodes and edges. The graph layer builds a graph from the model and analyses the graph to suggest new paths. Figure~\ref{fig:structure} shows the structure of the system. This multi-layer structure also facilitates easier unit testing.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.5\textwidth]{plan_images/multi_layer.png}
+    \caption{Structure of the system}
+    \label{fig:structure}
+\end{figure}
+
+\subsection{Data fetcher layer}
+All requests to the Overpass API are carried out by the data fetcher. An example query would be requesting all the ways within an area, specified by a bounding box. The result of the queries are stored in the data fetcher, and it exposes methods that are used by the \textbf{model} layer to select data.
+
+\subsection{Model layer}
+The model layer provides logical functions to process the data provided by the data fetcher. For example, given an OSM way, the model can evaluate its cycle-friendliness based on the tags associated with the way. In addition, the model converts the OSM data to a graph structure which consists of nodes and edges. This step is necessary because each OSM way may contain more than two nodes, and most graph libraries such as \texttt{NetworkX} do not support edges with more than two nodes. 
+
+\subsection{Graph layer}
+The graph layer constructs a \texttt{NetworkX} graph from nodes and edges provided by the model layer and performs analysis on it. It exposes methods to visualize and modify the graph, as well as to run various shortest path algorithms on the graph. If a framework other than \texttt{NetworkX} was preferred, all that would need to be replaced is the graph layer.
+
+\section{Data fetcher}
+The data fetcher contains the OSM data. This includes all the OSM nodes and ways within the area to be analysed. It should provide access to the relevant information regarding a node or a way. For example, we can store a mapping from node IDs to node objects, and in other layers (model and graph) we can use the lightweight node IDs to represent vertices, and we only access the actual node object when needed. This provides a form of abstraction: the model layer and the graph layer do not need to know the implementation details of OSM nodes and ways; they only need access to some properties such as node positions and way tags, which are provided by the data fetcher.
+
+Ideally, the OSM data returned by any requests can be cached in the data fetcher so that we do not make a new query for every OSM node we are interested in. The data fetcher should also provide some basic error handling, such as when some data is missing.
+
+\section{Model}
+The model processes the OSM data from the data fetcher. The main tasks of this layer include:
+\begin{itemize}
+    \item selecting OSM ways based on their cycle-friendly scores, and
+    \item converting OSM ways to vertices and edges to be used by the graph layer
+\end{itemize}
+
+The heuristic function to evaluate the cycle-friendliness of an OSM way lies in this layer. For the selection task, we keep a list of OSM ways whose scores are higher than some threshold. To convert OSM ways to a graph, we can process each OSM way in turn, convert OSM nodes to vertices and add edges to connect neighbouring nodes.
+
+For path finding purposes, we would like to construct two graphs: a cycle-friendly graph from cycle-friendly OSM ways, and a city graph from all OSM ways. The logic to convert the OSM ways to a graph is the same; the only difference in the process is the selection of OSM ways. For the city graph, we simply do not perform the selection, or we select all OSM ways. The output of this layer should be nodes and edges of each graph.
+
+There are several ways to represent a graph, using a list of edges or an adjacency list. We decided that the model layer should return an adjacency list, where each node ID is linked to a list of node IDs as its neighbours. This is the most natural way to represent our graph, as we are dealing with neighbouring nodes when processing OSM ways.
+
+\section{Graph}
+The graph receives an adjacency list from the model. To plot the graph, we need positions of each node, and this information is available in the data fetcher. The graph layer obtains node positions through the model layer, where the model requests this data from the data fetcher.
+
+On receiving the layout of nodes, the graph layer computes edge lengths according to node positions. All graph analysis happens in this layer, including path finding and component analysis. It should also provide methods to display and save the plots.
+
+\subsection{Path finding strategies} \label{sec:strategies}
+In Section \ref{sec:aims}, we mentioned that we would like to suggest the most efficient path to add to the graph to improve the connectedness of the cycling network. However, the definition of the \textit{most efficient} path varies depending on what the user needs the most. It could be that the user only wants to find the shortest path that would connect two big components, or maybe it is more important for the new path to be as central as possible. Three strategies with different priorities were designed to suggest paths.
+
+\subsubsection*{Strategy A: Overall shortest path}
+A simple strategy to improve the connectedness of the cycle-friendly subgraph would be to add a path to connect the largest component (region 1) and the second largest component (region 2). Given the graph of the whole area, we search for the shortest path from any node in region 1 to any node in region 2. Making this path cycle-friendly would connect region 1 and region 2 in the cycle-friendly subgraph and hence improving connectedness.
+
+\subsubsection*{Strategy B: Shortest path via town centre}
+One potential issue with strategy A is that the suggested path may be located at the edge of the town, which could be inconvenient for cyclists and its use rate might be low. To address this, strategy B attempts to find the shortest path from the most central node in region 1 to the most central node in region 2, where the most central node in a region is defined to be the node closest to the centre of the town.
+
+\subsubsection*{Strategy C: Shortest path via local centre}
+Strategy C works in a similar fashion as strategy B. It searches for the shortest path from the most central node in region 1 to the most central node in region 2. However, the most central node in a region does not depend on the centre of the town. Instead, it is defined to be the node closest to the centre of the region, i.e. the centre of the component.
+
+\section{System Configuration}
+As discussed in Section \ref{sec:aims}, the system should be flexible so that it can be applied to another area. To achieve this, the following attributes were designed to be configurable:
+
+\begin{itemize}
+    \item the bounding box of the area
+    \item the heuristics to evaluate the cycle-friendliness of an OSM way
+    \item the threshold for an OSM way to be considered cycle-friendly
+    \item the strategy to find the most efficient way to improve cycle infrastructure
+\end{itemize}
+
+There should be a configuration file which is independent of the system code and can be passed to the system as an argument. In the following sections, we would discuss how each attribute can be configured.
+
+\subsection{Area specification}
+The area can be specified by two things: the \textit{node ID} of the town or city, and the \textit{bounding box} to run the analysis on. The node ID was required for uniquely identifying a place, and the bounding box was used to limit the data to the region.
+
+\subsection{Cycle-friendly heuristics} \label{sec:cycle_heuristic}
+A heuristic function was designed to give a score to an OSM way depending on the tags associated with it to represent how cycle-friendly it is. The score was calculated by
+\begin{equation}\label{eq:heuristic}
+    h(way) = \frac{\sum_{t\in way.tags} t.key.weight \times t.value.score}{\sum_{t\in way.tags} t.key.weight}
+\end{equation}
+
+where each tag $t$ is a key-value pair, $t.key.weight$ is the weight assigned to tag $t$, $t.value.score$ is the score gained for tag $t$ to take value $t.value$, and $h(way)$ is the score given to the OSM way. This is essentially a weighted average of tag value scores, and both $t.key.weight$ and $t.value.score$ are configurable. Suppose in the configuration file we have two tags, \textit{cycleway} and \textit{smoothness}. We specify that the weight assigned to each tag is
+\begin{align*}
+    cycleway.weight &= 1 \\
+    smoothness.weight &= 0.5
+\end{align*}
+
+And the score assigned to each tag value is
+\begin{align*}
+    cycleway[track].score &= 1 \\
+    cycleway[share\_busway].score &= 0.6 \\
+    smoothness[excellent].score &= 1 \\
+    smoothness[intermediate].score &= 0.4
+\end{align*}
+
+Now suppose we have an OSM way with the following tags:
+\[cycleway=track, smoothness=intermediate\]
+
+The heuristic function should return
+\begin{align*}
+    h(way) &= \frac{1\times 1 + 0.5\times 0.4}{1 + 0.5} \\
+    &= 0.8
+\end{align*}
+
+Tags which do not appear in the configuration file are considered unimportant and have zero weight.
+
+\subsection{Cycle-friendly threshold}
+The heuristic function assigns a cycle-friendly score to each OSM way, and we would like to make the binary decision of whether a way should be classified as cycle-friendly based on its score. We could define a threshold in the configuration file, and consider a way to be cycle-friendly only if it gives a score higher than the threshold. The choice of the threshold value is important. If it is set too high, not many ways will be selected; if it is set too low, not much filtering will happen and the resulting graph will not give much useful information.
+
+\subsection{Strategies}
+User should be able to specify which strategies they prefer to use, as discussed in Section~\ref{sec:strategies}.
+
+\chapter{Implementation}\label{chapter:impl}
+This chapter focuses on the implementation of our system.
+
+\section{Data Fetcher}
+All queries to the Overpass API were made in the data fetcher layer. Given the bounding box of an area to be analysed, we are interested in all the nodes and ways within this area. This data could be fetched using the query
+\begin{verbatim}
+    nwr(south, west, north, east); out;
+\end{verbatim}
+where the tuple \texttt{(south, west, north, east)} specifies the bounding box, and \texttt{nwr} stands for nodes, ways and relations.
+
+We used \texttt{overpy} to perform the query and the result was cached in a \texttt{Result} object. The following was provided to the model layer:
+\begin{enumerate}
+    \item All the OSM ways within a given area
+    \item A method to fetch all the nodes on a given OSM way
+    \item A method to get the location of a given OSM node, in longitude and latitude
+\end{enumerate}
+
+The model needs access to all the OSM ways as well as all the nodes on each way so that it can analyse the cycle-friendliness of ways and convert ways to nodes and edges. The location of each node is helpful when plotting the graph.
+
+The OSM ways in the area were stored in \texttt{Result.ways}, which is a list of \texttt{Way} objects. To get all the nodes on a given way, the \texttt{Way} object provides a \texttt{get\_nodes} method. The longitude and latitude of a node can be accessed by \texttt{Node.lon} and \texttt{Node.lat}.
+
+It should be noted that when querying data within a bounding box, the returned \texttt{Way} may not be completely inside the bounding box. This means that when we fetch all the nodes on a given way, some nodes may be outside the bounding box. To keep the graph clean and focused, we would like to disregard nodes that are outside the boundary.
+
+\section{Model}
+The model layer handles the filtering of OSM ways. Since we were interested in the cycle-friendly subgraph, we implemented a heuristic function that gives a cycle-friendly score to each way by analysing the tags associated with it, as defined in Equation \ref{eq:heuristic}.
+
+Two data classes, \texttt{Tag} and \texttt{WeightedTags}, were created to store the weighting of the tags. \texttt{Tag} has two attributes:
+\begin{itemize}
+    \item \texttt{weight}, which is a float representing the tag weight (\textit{t.key.weight})
+    \item \texttt{values}, which maps each tag value to a score (\textit{t.value.score})
+\end{itemize}
+
+On the other hand, \texttt{WeightedTags} stores a mapping from a tag key to a \texttt{Tag}. It also provides a method, \texttt{weight\_sum}, which calculates the sum of weight for all the tags. These data classes facilitated the implementation of Equation \ref{eq:heuristic}. With the score function, we could select cycle-friendly ways based on a given threshold.
+
+The next step was to convert OSM ways to vertices and edges. Since each OSM way could consist of more than two nodes, a simple method to convert it into edges would be breaking the way at each intermediate node. For example, consider an OSM way represented by
+\[A - B - C - D\]
+Since each way is an ordered list of nodes, we could represent it using three edges:
+\[A - B, B - C, C - D\]
+
+The number of vertices and edges we obtained using this approach would greatly depend on the size of the area. To simplify the graph, we would like to keep nodes that are either at the beginning or the end of a way, or if they appear on more than one way. We introduced a \textit{link counter} to keep track of the number of links each node has. This is done by going through all the ways and incrementing the counter for each node on the way.
+
+Then, we can use the \textit{link counter} to convert OSM ways into edges, represented by an adjacency list. For each OSM way, we look at every intermediate node, i.e. any node that is not at the beginning nor the end of the way. If a node has more than one link, we keep the node and break the way at this node; otherwise, we ignore the node. The pseudocode for this algorithm is demonstrated in Algorithm~\ref{alg:adj}.
+
+\begin{algorithm}
+\caption{An algorithm to convert hyperedges to an adjacency list}\label{alg:adj}
+\begin{algorithmic}
+\Require $hyperedges, linkCounter$
+\Ensure $adj$
+\State $adj\gets$ empty dictionary
+\For{$e$ \textbf{in} $hyperedges$}
+    \State $currentPointer\gets 0$
+    \State $currentNode\gets e[currentPointer]$
+    \State $nextPointer \gets currentPointer + 1$
+    \While{$nextPointer < size(e)$}
+        \State $nextNode\gets e[nextPointer]$
+        \If{$linkCounter[nextNode] > 1$ \textbf{or} $nextPointer = size(e)-1$}
+            \If{$currentNode \neq nextNode$}
+                \State $neighbours\gets$ empty list
+                \If{$currentNode$ \textbf{in} $adj$}
+                    \State $neighbours\gets adj[currentNode]$
+                \EndIf
+                \State add $nextNode$ to $neighbours$
+                \State $adj[currentNode]\gets neighbours$
+                \State $currentPointer\gets nextPointer$
+                \State $nextPointer\gets currentPointer + 1$
+            \EndIf
+        \Else
+            \State $nextPointer\gets nextPointer + 1$
+        \EndIf
+    \EndWhile
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+
+\section{Graph}
+In the graph layer, we construct a graph from vertices and edges provided by the model layer. Two graphs were created: a graph that only consists of cycle-friendly edges, known as the \textit{cycle-friendly graph}, and a graph which consists of all edges regardless of their cycle-friendliness, known as the \textit{city graph}. Our goal was to find a path in the city graph that if it were to be made cycle-friendly, the connectedness of the cycle-friendly graph would improve the most.
+
+\subsection{Choice of graph libraries}
+Two graph libraries, \texttt{NetworkX} and \texttt{python-igraph}, were experimented with during the implementation. We discovered that \texttt{NetworkX} produced better plots using \texttt{Matplotlib} than \texttt{python-igraph} did. Figure~\ref{fig:igraph} and \ref{fig:networkx} shows a plot produced by \texttt{python-igraph} and \texttt{NetworkX} respectively. We can see that the \texttt{igraph} plot is much more compact, and it is very difficult to distinguish nodes next to each other. On the other hand, \texttt{NetworkX} provides better colouring settings and the resulting plot is tidier. Therefore, \texttt{NetworkX} was the main library used in the graph layer.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.7\textwidth]{plan_images/igraph.png}
+    \caption{A plot produced by \texttt{python-igraph}}
+    \label{fig:igraph}
+\end{figure}
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.7\textwidth,trim={2.5cm 1.5cm 1.7cm 1.7cm},clip]{plan_images/networkx.png}
+    \caption{A plot produced by \texttt{NetworkX}}
+    \label{fig:networkx}
+\end{figure}
+
+\subsection{Plotting}
+We obtained nodes and edges from the OSM data in the model layer, and we would like to plot the graph to see how well it represents the St Andrews area. To achieve this, each node must be given a position. Since we had access to the longitude and latitude of a node, we created a mapping from node ID to node coordinates, and this was used as a position attribute assigned to each node. Figure~\ref{fig:graph layout} shows the plot of the cycle-friendly graph overlaying the OpenStreetMap of St Andrews.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.7\textwidth]{plan_images/graph_layout.png}
+    \caption{The cycle-friendly graph overlaying the OpenStreetMap}
+    \label{fig:graph layout}
+\end{figure}
+
+\subsection{Geometric edges}
+A closer look at the constructed graph reveals a problem. Figure~\ref{fig:close before} shows part of the cycle-friendly graph, where the red region is the largest connected component in the graph. We can see that the right most part of the red region appears to be connected to the edge next to it, but they were actually not connected in the graph. Figure~\ref{fig:osm close} shows the corresponding part in OpenSteetMap. Although Lade Braes Walk (vertical red dotted line) and Queen's Terrace (horizontal white solid line) do not share any nodes on OSM, it seems like they do have an intersection, so they should be considered as connected. In addition, Figure~\ref{fig:google close} shows the Google Maps street view of Queen's Terrace, where Lade Braes Walk is clearly accessible.
+
+There are many other examples in our constructed graph where nodes are very close to each other but disconnected, even though in real life it is possible for a cyclist to move from one node to another. To address this, for every pair of nodes that are geographically close to each other, we added an edge to connect them. Conveniently, \texttt{NetworkX} provides a method called \texttt{geometric\_edges} which computes the edge list of node pairs within a certain radius of each other. This radius is configurable in the configuration file. Figure~\ref{fig:close after} shows the graph after connecting close nodes, with radius set to 0.0005. The red region which represents the largest component is now larger, connecting nodes and edges that are nearby.
+
+\begin{figure}[ht]
+    \centering
+    \begin{subfigure}[ht]{0.35\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{plan_images/close_before.png}
+        \caption{Before adding geometric edges}
+        \label{fig:close before}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[ht]{0.35\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{plan_images/close_after.png}
+        \caption{After adding geometric edges}
+        \label{fig:close after}
+    \end{subfigure}
+       \caption{Part of the cycle-friendly graph}
+       \label{fig:close example}
+\end{figure}
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.7\textwidth]{plan_images/osm_close.png}
+    \caption{The corresponding part of Figure~\ref{fig:close example} in OpenStreetMap}
+    \label{fig:osm close}
+\end{figure}
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.7\textwidth]{plan_images/googlemap_cross.png}
+    \caption{Google Maps street view of Queen's Terrace}
+    \label{fig:google close}
+\end{figure}
+
+\subsection{Connected components}
+In order to identify isolated islands in the cycle-friendly graph, we would like to analyse the connected components in the graph. \texttt{NetworkX} provides methods to find connected components, and we are interested in connecting the largest component with the second largest component. There are a few possible definitions of \textit{the largest} component; it could be the component that contains the most number of nodes, or the most number of edges, or the area it spans is the largest. We decided to use area as the metric as it would make the most sense - it is better to connect geographically big areas than to connect small areas with many nodes.
+
+Now the question becomes, how do we measure the area of a component? We adapted a simple but effective method: for each component, we compute the total length of all the edges inside the component. The longer the edges are, the more likely it is that the component is going to span across a big area. Then, we sorted the connected components using this criterion and identified the two largest component, as demonstrated in Figure~\ref{fig:component}.
+
+Another approach we considered was to measure the geographical area enclosed by the component. This was challenging because the formulae for calculating the area of an irregular polygon assume that its boundary is known. However, we have a large collection of nodes, and it is difficult to distinguish which nodes are on the boundary and which are not. One possible way to find the boundary was to take the extreme compass points, i.e. the nodes with the greatest and least longitude and latitude. The problem with this approach was that we may not always end up with more than two nodes, for example, when the north-most node is also the east-most node, and the south-most node is also the west-most node. In this case, the nodes would form a line which has no area.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.8\textwidth,trim={2.5cm 1.5cm 1.7cm 1.7cm},clip]{plan_images/components.png}
+    \caption{Connected components in the cycle-friendly graph}
+    \label{fig:component}
+\end{figure}
+
+\subsection{Weighted graph}
+Our strategies involve running the shortest path algorithm on the graph. This shortest path should reflect on the actual length of the path in the map, which means we have to assign weights to edges. This could be achieved easily if we were provided with the length of each OSM way, but this data is not available on the Overpass API. Hence, we would like to estimate the length of an edge based on node coordinates. Given two nodes, $u$ and $v$, and their coordinates, $u = (u_0, u_1)$ and $v = (v_0, v_1)$, where $u_0, v_0$ is the latitude and $u_1, v_1$ is the longitude, we can compute the geodesic distance between the nodes using \texttt{geopy}~\cite{geopy}, a python package for geocoding. This distance could be used as the weight of the edge $uv$.
+
+\subsection{Strategies}
+Recall that we discussed three strategies in Section~\ref{sec:strategies}. All these strategies involve finding the shortest path. \texttt{NetworkX} provides an implementation of Dijkstra's algorithm, and this was utilized differently for each strategy. 
+
+\subsubsection*{Strategy A: Overall shortest path}
+To find the overall shortest path between two regions, we ran Dijkstra's algorithm from every node in region 1 to every node in region 2. For each path found, we kept track of the length of the path as well as the path itself, in the form of a list of nodes on the path. Each time a shorter path was found, we replaced the stored path with the new shorter path. Eventually, we ended up with the overall shortest path between the two regions.
+
+\subsubsection*{Strategy B: Shortest path via town centre}
+In OpenStreetMap, there is a node representing the centre of St Andrews. Since OSM nodes have coordinates, we used this to find the nearest node to the centre of St Andrews in each region. The distance from a node to the centre was calculated using the geodesic distance. After finding the most central node for each region, we used Dijkstra's algorithm to compute the shortest path between these nodes.
+
+\subsubsection*{Strategy C: Shortest path via local centre}
+In Strategy C, we find the nodes that are central within each region. A method called \texttt{NetworkX.centre} was used to obtain the set of central nodes of a graph, where the maximal distance from the central nodes to other nodes in the graph is minimized. We could construct a subgraph for each region and find the central nodes. For simplicity, we took the first returned node as the centre of the region. After that, we ran Dijkstra's algorithm from the central node in region 1 to the central node in region 2.
+
+\section{Testing Approach}
+
+\chapter{Evaluation}\label{chapter:eval}
+In this chapter, we reflect on the goals and objectives of this project. We first present some plots produced by the system, and we compare our system against other approaches. In addition, we discuss the limitations of our system.
+
+\section{Configuration}
+As discussed in the design and implementation chapters, the system is designed in such a way that the choice of which tags contribute to the cycle-friendly score are the responsibility of the user. A default configuration file was created, using the legend and documentation of CyclOSM~\cite{cycleOSM} as inspiration. CyclOSM uses OpenStreetMap data to highlight cycling infrastructure. Similarly to this project, it utilises the tags of ways, so it is a relatively complete reference for the most important tags to be considered. As mentioned in the context survey, one difficulty with OpenStreetMap is that since different groups of mappers have their own conventions, there are a wide variety of tag-value mappings that represent the same things. As a consequence, CyclOSM does not cover every relevant combination of tags. The extensible configuration means that a local town planner could adapt the system to suit the conventions of the local area.
+
+\section{Cycle-friendly Graph and CyclOSM} \label{sec:eval_osm}
+We compared the cycle-friendly graph generated by our system against CyclOSM~\cite{cycleOSM}. Figure~\ref{fig:cyclosm st andrews} shows the map of St Andrews in CyclOSM, and the map legend is shown in Figure~\ref{fig:cyclosm legend}. The cycle-friendly graph produced using the heuristics we defined is shown in Figure~\ref{fig:cycle friendly graph} (CHANGE FIGURE TO NEW MAP).
+
+An earlier produced graph is shown in Figure (INSERT FIGURE - OLD MAP). Upon a closer look at some of the paths we discovered an omission in the CyclOSM view. There are a few streets which have a cycle path where the value for the \texttt{cycleway} tag is \texttt{opposite}, however this value is not considered by CyclOSM. Therefore, this tag was added to the default configuration file, and the more complete cycle-friendly graph was produced.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.9\textwidth]{plan_images/cyclosm_st_andrews.png}
+    \caption{CyclOSM of St Andrews}
+    \label{fig:cyclosm st andrews}
+\end{figure}
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.3\textwidth]{plan_images/cyclosm_legend.png}
+    \caption{CyclOSM legend of bicycle infrastructure}
+    \label{fig:cyclosm legend}
+\end{figure}
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.8\textwidth,trim={2.5cm 1.5cm 1.7cm 1.7cm},clip]{plan_images/cycle_friendly.png}
+    \caption{The cycle-friendly graph generated by our system}
+    \label{fig:cycle friendly graph}
+\end{figure}
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.8\textwidth,trim={1cm 1cm 1cm 1cm},clip]{plan_images/overlay_st_andrews.png}
+    \caption{The cycle-friendly graph overlaying the CyclOSM}
+    \label{fig:overlay st andrews}
+\end{figure}
+
+Figure~\ref{fig:overlay st andrews} (CHANGE FIGURE TO NEW MAP) shows the cycle-friendly graph overlaying the CyclOSM of St Andrews. We can see that ways with a separate cycle way and paths designated for bicycles are identified in our plot. On the other hand, the busy main roads such as \textit{North Street} and \textit{South Street} do not appear, which is sensible as they are not very safe to cycle on. We also identified some additional cycle-friendly paths, which fall into two categories: \begin{enumerate}
+    \item Roads that have a cycle path but were not highlighted by CyclOSM for the reasons discussed earlier, such as \textit{Greyfriars Garden}.
+    \item Roads that do not have a cycle path, but which our heuristic deemed cycle-friendly, such as \textit{Bell Street}. In this case it is a small tertiary road, so it would likely be acceptable for most cyclists to cycle through there.
+\end{enumerate}
+
+Since \textit{Bell Street} connects to \textit{Greyfriars Garden}, it would seem reasonable for cyclists to use this route to go from \textit{South Street} to \textit{North Street} using the existing cycling infrastructure. In CyclOSM, this route is not highlighted. Note that one limitation of our system is that we don't consider direction - \textit{Bell Street} is one way for cyclists as well as cars so it would not be so easy to use this route to go from \textit{North Street} to \textit{South Street}.
+
+\section{Application to Other Areas}
+
+\section{Comparison to Other Approaches}
+% E.g. Doing a survey of cyclists. Would that be more accurate? It would cost more than this method.
+
+\section{Limitations}
+
+
+\section{Success criteria}
+In Section~\ref{sec:aims}, We presented a list of aims and objectives. We will look at each of the objectives in turn to evaluate the success of this project.
+
+\subsection{Primary objectives}
+\begin{enumerate}
+    \item \textbf{Develop an automated process that turns the OpenStreetMap data for an area into a graph annotated with data relevant to cycle accessibility and apply this to St Andrews}
+
+    We implemented a three-layer system: a data fetcher to request the OpenStreetMap data, a model to process the data into a graph based on cycling information, and a graph layer to display and analyse the graph. We also provided a script \texttt{main.py} as the entry point to the program, so that the above analysis can happen automatically in one command. This process was applied to the area of St Andrews, as discussed in Section~\ref{sec:eval_osm}. This objective is considered fully complete.
+
+    \item \textbf{Develop a set of configurable heuristics to determine whether a route is cycle friendly}
+
+    A heuristic function was given in Section~\ref{sec:cycle_heuristic}, where the weightings and scores can be configured in \texttt{configuration.json}. In addition, the threshold score for which a way is considered to be cycle-friendly is configurable. This goal is considered fully complete.
+
+    \item \textbf{Apply the heuristics to highlight disconnected components in the cycle-friendly subgraph}
+
+    \item \textbf{Consider other properties of the graph, such as k-connectivity and induced subgraphs, to produce other findings relevant to cycling}
+
+    \item \textbf{Suggest the most efficient paths to add to increase the connectedness of the subgraph}
+
+    We have developed three strategies to suggest new paths, as discussed in Section~\ref{sec:strategies}.
+\end{enumerate}
+
+\subsection{Secondary objectives}
+\begin{enumerate}
+    \item \textbf{Apply this analysis process to another similar area and assess how well the automated process works for areas it was not designed for}
+
+    \item \textbf{Apply the analysis process to a larger area to evaluate the scalability of the technique}
+
+    \item \textbf{Consider the cost of adding new paths when making suggestions}
+\end{enumerate}
+
+\chapter{Conclusions}\label{chapter:concl}
+
+%TC:ignore
+\bibliographystyle{plain}
+\addcontentsline{toc}{chapter}{Bibliography}
+\bibliography{diss_refs}
+
+\appendix
+\chapter{Appendix}
+\section{Testing summary}
+\section{User manual}
+\section{Ethics}
+
+%TC:endignore
+\end{document}
