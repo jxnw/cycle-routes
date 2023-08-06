@@ -11,10 +11,10 @@
 	"boundingBoxes": {
 		"StAndrews": {
 			"nodeId": 21511530,
-			"south": 56.3284,
-			"west": -2.8350,
-			"north": 56.3437,
-			"east": -2.7855
+			"south": 56.3279,
+			"west": -2.8265,
+			"north": 56.3438,
+			"east": -2.7833
 		},
 		"Cambridge": {
 			"nodeId": 20971094,
@@ -57,6 +57,7 @@
 			"values": {
 				"track": 1,
 				"lane": 0.8,
+				"opposite": 0.8,
 				"shared_lane": 0.6,
 				"share_busway": 0.6,
 				"opposite_share_busway": 0.6

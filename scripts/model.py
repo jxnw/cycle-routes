@@ -52,6 +52,8 @@ class Model:
     def ways_to_adj_list(hyper_edges: List[List[overpy.Node]], link_count: Dict[int, int]) -> Dict[int, List[int]]:
         adj_list: Dict[int, List[int]] = {}
         for h_edge in hyper_edges:
+            if len(h_edge) == 0:
+                continue
             cur_pointer = 0
             cur_node = h_edge[cur_pointer]
             next_pointer = cur_pointer + 1

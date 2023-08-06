@@ -11,6 +11,7 @@ class DataFetcherTestCase(unittest.TestCase):
         self.mock_api = mock_api
         self.mock_config = Mock(spec=Config)
         self.mock_config.bounding_box = BoundingBox(node_id=123, south=0.1, west=0.2, north=0.3, east=0.4)
+
         self.data_fetcher = DataFetcher(self.mock_config)
 
         self.mock_node = Mock(spec=overpy.Node)

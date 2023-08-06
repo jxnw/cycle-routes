@@ -8,13 +8,13 @@ from unittest.mock import Mock
 
 class ModelTestCase(unittest.TestCase):
     def setUp(self) -> None:
-        self.mock_data_fetcher = Mock(spec=DataFetcher)
-
         self.mock_config = Mock(spec=Config)
         self.mock_config.bounding_box = BoundingBox(node_id=123, south=0.1, west=0.2, north=0.3, east=0.4)
         self.mock_config.threshold = 0.5
 
+        self.mock_data_fetcher = Mock(spec=DataFetcher)
         self.mock_data_fetcher.config = self.mock_config
+
         self.model = Model(self.mock_data_fetcher)
 
     def test_get_node_pos(self):
@@ -44,7 +44,7 @@ class ModelTestCase(unittest.TestCase):
         }
         score = self.model.eval_way(mock_way)
 
-        self.assertEqual(score, 1)
+        self.assertEqual(1, score)
 
     def test_eval_way_empty_tag(self):
         weighted_tags = WeightedTags({
@@ -61,7 +61,7 @@ class ModelTestCase(unittest.TestCase):
         mock_way.tags = {}
         score = self.model.eval_way(mock_way)
 
-        self.assertEqual(score, 0)
+        self.assertEqual(0, score)
 
     def test_eval_way_tag_does_not_exist(self):
         weighted_tags = WeightedTags({
@@ -80,7 +80,7 @@ class ModelTestCase(unittest.TestCase):
         }
         score = self.model.eval_way(mock_way)
 
-        self.assertEqual(score, 0)
+        self.assertEqual(0, score)
 
     def test_eval_way_value_does_not_exist(self):
         weighted_tags = WeightedTags({
@@ -99,7 +99,7 @@ class ModelTestCase(unittest.TestCase):
         }
         score = self.model.eval_way(mock_way)
 
-        self.assertEqual(score, 0)
+        self.assertEqual(0, score)
 
     def test_count_node_links(self):
         mock_node_0 = Mock(spec=overpy.Node)
