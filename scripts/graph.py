@@ -3,7 +3,6 @@ import networkx as nx
 import numpy as np
 from geopy import distance
 from matplotlib import colormaps
-from scripts.exception import NoSuggestedPathException
 from scripts.model import Model
 from typing import Dict, List, Set, Tuple
 
@@ -35,11 +34,7 @@ class GraphProcessing:
         if self.config.zero_cost:
             edge_length = self.set_zero_cost(edge_length)
             nx.set_edge_attributes(self.graph_unfiltered, edge_length, 'length')
-
-        if len(sorted_groups) >= 2:
-            return [sorted_groups[0], sorted_groups[1]]
-        else:
-            raise NoSuggestedPathException('Graph is fully connected!')
+        return sorted_groups
 
     def set_zero_cost(self, edge_length: Dict[Tuple[int, int], float]):
         for edge in edge_length.keys():

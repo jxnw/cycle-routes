@@ -29,10 +29,11 @@ class Model:
             weight, mapping = tag.weight, tag.values
             tag_score = 0
             if tag_key == 'maxspeed':
+                t_value = int(tag_value.split(' ')[0])
                 for m_key, m_value in mapping.items():
                     m_range = m_key.split(',')
                     start, end = int(m_range[0]), int(m_range[1])
-                    if start < m_value <= end:
+                    if start < t_value <= end:
                         tag_score = m_value
                         break
             else:

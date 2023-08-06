@@ -69,8 +69,9 @@ class Config:
     weighted_tags: WeightedTags
 
     @classmethod
-    def from_dict(cls, data):
-        area = data.get("area")
+    def from_dict(cls, data, area=None):
+        if area is None:
+            area = data.get("area")
         bounding_boxes = data.get('boundingBoxes')
         if area not in bounding_boxes.keys():
             raise Exception(f"{area} does not have a corresponding bounding box in configuration.json")

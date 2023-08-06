@@ -18,10 +18,17 @@
 		},
 		"Cambridge": {
 			"nodeId": 20971094,
-			"south": 52.1956,
-			"west": 0.0757,
-			"north": 52.2372,
-			"east": 0.1581
+			"south": 52.1781,
+			"west": 0.0718,
+			"north": 52.2398,
+			"east": 0.1799
+		},
+		"Dundee": {
+			"nodeId": 21262495,
+			"south": 56.4507,
+			"west": -3.0580,
+			"north": 56.4978,
+			"east": -2.9107
 		}
 	},
 	"weightedTags": {

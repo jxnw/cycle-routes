@@ -3,7 +3,6 @@ import json
 import os
 from scripts.config import Config
 from scripts.data_fetcher import DataFetcher
-from scripts.exception import NoSuggestedPathException
 from scripts.model import Model
 from scripts.graph import GraphProcessing
 
@@ -25,16 +24,14 @@ def main():
     model = Model(data_fetcher)
     graph = GraphProcessing(model)
 
-    try:
-        largest_components = graph.preprocessing()
-    except NoSuggestedPathException as e:
-        print(e)
-        graph.display(filepath=os.path.join(root, args.save, 'cycle_friendly.png'))
-    else:
-        graph.display(filepath=os.path.join(root, args.save, 'cycle_friendly.png'))
-        graph.display(largest_components, filepath=os.path.join(root, args.save, 'components.png'))
+    components = graph.preprocessing()
+    graph.display(filepath=os.path.join(root, args.save, 'cycle_friendly.png'))
+    graph.display(components, filepath=os.path.join(root, args.save, 'components.png'))
 
-        region_from, region_to = largest_components
+    if len(components) < 2:
+        print('Graph is fully connected, no paths suggested')
+    else:
+        region_from, region_to = components[0], components[1]
         strategies = config.strategies
 
         if strategies.get('overall', False):
