@@ -49,7 +49,8 @@ class GraphProcessing:
         dist = float('inf')
         shortest_path = []
         for target in to_region:
-            dist_temp, path = nx.multi_source_dijkstra(self.graph_unfiltered, from_region, target=target, weight='length')
+            dist_temp, path = nx.multi_source_dijkstra(self.graph_unfiltered, from_region, target=target,
+                                                       weight='length')
             if dist_temp < dist:
                 dist = dist_temp
                 shortest_path = path
@@ -128,11 +129,11 @@ class GraphProcessing:
             size += subgraph.get_edge_data(*edge)['length']
         return size
 
-    def get_edge_length(self, edge: Tuple[int, int]):
-        return self.get_geodesic_distance(self.layout[edge[0]], self.layout[edge[1]])
-
     def get_geometric_edges(self, graph) -> List[Tuple[int, int]]:
         return nx.geometric_edges(graph, radius=self.config.neighbour_eps)
+
+    def get_edge_length(self, edge: Tuple[int, int]):
+        return self.get_geodesic_distance(self.layout[edge[0]], self.layout[edge[1]])
 
     @staticmethod
     def get_geodesic_distance(pos1: Tuple[float, float], pos2: Tuple[float, float]):
@@ -141,7 +142,8 @@ class GraphProcessing:
     @staticmethod
     def trim_path(path: List[Tuple[int, int]], from_region: Set[int], to_region: Set[int]):
         enum_edges = list(enumerate(path))
-        edges_in_from = [(i, edge) for (i, edge) in enum_edges if edge[0] in from_region and edge[1] not in from_region]
-        edges_in_to = [(i, edge) for (i, edge) in enum_edges if edge[0] not in to_region and edge[1] in to_region]
-        start, end = edges_in_from[-1][0], edges_in_to[0][0]
+        edges_from = [(i, edge) for (i, edge) in enum_edges if edge[0] in from_region and edge[1] not in from_region]
+        start = edges_from[-1][0]
+        edges_to = [(i, edge) for (i, edge) in enum_edges[start:] if edge[0] not in to_region and edge[1] in to_region]
+        end = edges_to[0][0]
         return path[start:end + 1]

@@ -1,5 +1,5 @@
-import unittest
 import overpy
+import unittest
 from scripts.config import BoundingBox, Config, WeightedTags
 from scripts.data_fetcher import DataFetcher
 from scripts.model import Model

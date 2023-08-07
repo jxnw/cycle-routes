@@ -23,7 +23,7 @@ class DataFetcher:
         mapping: Dict[int, List[overpy.Node]] = {}
         for way in self.result.ways:
             nodes = way.get_nodes(resolve_missing=True)
-            nodes = [node for node in nodes if self.__node_in_area(node)]
+            nodes = [node for node in nodes if self.node_in_area(node)]
             mapping[way.id] = nodes
         return mapping
 
@@ -33,6 +33,6 @@ class DataFetcher:
     def get_centre(self) -> Tuple[float, float]:
         return float(self.centre.nodes[0].lon), float(self.centre.nodes[0].lat)
 
-    def __node_in_area(self, node: overpy.Node) -> bool:
+    def node_in_area(self, node: overpy.Node) -> bool:
         lon, lat = float(node.lon), float(node.lat)
         return (lon <= self.box.east) and (lon >= self.box.west) and (lat >= self.box.south) and (lat <= self.box.north)

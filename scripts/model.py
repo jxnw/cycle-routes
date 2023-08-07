@@ -1,6 +1,6 @@
+import overpy
 from scripts.data_fetcher import DataFetcher
 from typing import Dict, List, Tuple
-import overpy
 
 
 class Model:

@@ -3,8 +3,8 @@ import json
 import os
 from scripts.config import Config
 from scripts.data_fetcher import DataFetcher
-from scripts.model import Model
 from scripts.graph import GraphProcessing
+from scripts.model import Model
 
 
 def main():

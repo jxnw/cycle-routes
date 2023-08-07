@@ -1,8 +1,7 @@
 import unittest
 from scripts.config import Config
-from scripts.exception import NoSuggestedPathException
-from scripts.model import Model
 from scripts.graph import GraphProcessing
+from scripts.model import Model
 from unittest.mock import Mock
 
 
@@ -33,14 +32,52 @@ class GraphProcessingTestCase(unittest.TestCase):
                                                      1: (0.3, 0.4)}
 
         graph = GraphProcessing(self.mock_model)
-        with self.assertRaises(NoSuggestedPathException):
-            graph.preprocessing()
+        components = graph.preprocessing()
+
+        self.assertEqual(1, len(components))
 
     def test_preprocessing_not_fully_connected(self):
-        largest_components = self.graph.preprocessing()
+        components = self.graph.preprocessing()
 
         expected = [{0, 1}, {2, 3}]
-        self.assertEqual(expected, largest_components)
+        self.assertEqual(expected, components)
 
-    def test_set_zero_cost(self):
-        pass
+    def test_trim_path_no_cycle(self):
+        path = [(0, 1), (1, 2)]
+        from_region = {0}
+        to_region = {2}
+
+        path = self.graph.trim_path(path, from_region, to_region)
+        expected = [(0, 1), (1, 2)]
+
+        self.assertEqual(expected, path)
+
+    def test_trim_path_one_cycle(self):
+        path = [(0, 1), (1, 0), (0, 2)]
+        from_region = {0}
+        to_region = {2}
+
+        path = self.graph.trim_path(path, from_region, to_region)
+        expected = [(0, 2)]
+
+        self.assertEqual(expected, path)
+
+    def test_trim_path_many_head_cycles(self):
+        path = [(0, 1), (1, 0), (0, 1), (1, 2), (2, 0), (0, 2)]
+        from_region = {0}
+        to_region = {2}
+
+        path = self.graph.trim_path(path, from_region, to_region)
+        expected = [(0, 2)]
+
+        self.assertEqual(expected, path)
+
+    def test_trim_path_many_tail_cycles(self):
+        path = [(0, 1), (1, 2), (2, 1), (1, 2), (2, 1), (1, 2)]
+        from_region = {0}
+        to_region = {2}
+
+        path = self.graph.trim_path(path, from_region, to_region)
+        expected = [(0, 1), (1, 2)]
+
+        self.assertEqual(expected, path)

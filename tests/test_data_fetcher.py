@@ -61,3 +61,27 @@ class DataFetcherTestCase(unittest.TestCase):
         centre = self.data_fetcher.get_centre()
 
         self.assertEqual((0.5, 0.6), centre)
+
+    def test_node_in_area_true(self):
+        mock_node = Mock(spec=overpy.Node)
+        mock_node.lon, mock_node.lat = 0.3, 0.2
+
+        in_area = self.data_fetcher.node_in_area(mock_node)
+
+        self.assertTrue(in_area)
+
+    def test_node_in_area_false(self):
+        mock_node = Mock(spec=overpy.Node)
+        mock_node.lon, mock_node.lat = 0.19, 0.09
+
+        in_area = self.data_fetcher.node_in_area(mock_node)
+
+        self.assertFalse(in_area)
+
+    def test_node_in_area_boundary(self):
+        mock_node = Mock(spec=overpy.Node)
+        mock_node.lon, mock_node.lat = 0.2, 0.1
+
+        in_area = self.data_fetcher.node_in_area(mock_node)
+
+        self.assertTrue(in_area)
