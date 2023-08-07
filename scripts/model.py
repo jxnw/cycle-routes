@@ -13,7 +13,7 @@ class Model:
 
     def get_adj_list(self, threshold=None):
         threshold = threshold if threshold is not None else self.config.threshold
-        hyper_edges = [self.nodes_on_ways[way.id] for way in self.all_ways if self.eval_way(way) >= threshold]
+        hyper_edges = [self.nodes_on_ways.get(way.id, []) for way in self.all_ways if self.eval_way(way) >= threshold]
         link_counter = self.count_node_links(hyper_edges)
         adj_list = self.ways_to_adj_list(hyper_edges, link_counter)
         return adj_list

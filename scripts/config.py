@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from scripts.exception import AreaNotDefinedException
 from typing import Dict
 
 TAG_MAPPINGS = {
@@ -74,7 +75,7 @@ class Config:
             area = data.get("area")
         bounding_boxes = data.get('boundingBoxes')
         if area not in bounding_boxes.keys():
-            raise Exception(f"{area} does not have a corresponding bounding box in configuration.json")
+            raise AreaNotDefinedException(f"{area} does not have a corresponding bounding box in configuration.json")
         return cls(
             area=area,
             threshold=data.get('threshold'),

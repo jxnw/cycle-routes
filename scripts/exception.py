@@ -1,6 +1,2 @@
-class NoSuggestedPathException(Exception):
-    pass
-
-
-class NoPathFoundException(Exception):
+class AreaNotDefinedException(Exception):
     pass
