@@ -10,6 +10,13 @@
 \renewcommand{\algorithmicrequire}{\textbf{Input:}}
 \renewcommand{\algorithmicensure}{\textbf{Output:}}
 
+\usepackage{listings}
+\lstset{
+basicstyle=\small\ttfamily,
+columns=flexible,
+breaklines=true
+}
+
 \usepackage{graphicx}
 \graphicspath{ {./plan_images/} }
 
@@ -93,7 +100,7 @@ Chapter \ref{chapter:context} gives an overview of graph theory which is relevan
 This project is closely related to graph theory, and research has been done in this field. In Section \ref{sec:graph_theory}, we would look into some important concepts in graph theory. Section \ref{sec:related_work} gives an overview of related work in this area. Tools and libraries that may be relevant to this project are discussed.
 
 \section{Graph Theory} \label{sec:graph_theory}
-A \textit{graph} $G=(V,E)$ is a mathematical structure which consists of a set of vertices $V$ and a set of edges $E$, where each edge is a pair of vertices in $V$~\cite{chartrand}. A graph $H$ is called a \textit{subgraph} of $G$ if $V(H) \subseteq V(G)$ and $V(H) \subseteq V(G)$. A \textit{weighted} graph is a graph where each edge is assigned a weight value. A \textit{directed} graph is a graph where each edge is directed, whereas an \textit{undirected} graph is a graph where edges have no direction. A \textit{hypergraph} is denoted by $H=(V;\mathcal{E})$, where $V$ is a set of vertices and $\mathcal{E}$ is a set of hyperedges. Each hyperedge joins any number of vertices.
+A \textit{graph} $G=(V,E)$ is a mathematical structure which consists of a set of vertices $V$ and a set of edges $E$, where each edge is a pair of vertices in $V$~\cite{chartrand}. A graph $H$ is called a \textit{subgraph} of $G$ if $V(H) \subseteq V(G)$ and $V(H) \subseteq V(G)$. A \textit{weighted} graph $G=(V,E,W)$ is a graph where each edge is assigned a weight value, and the weight mapping is stored in $W$. A \textit{directed} graph is a graph where each edge is directed, whereas an \textit{undirected} graph is a graph where edges have no direction. A \textit{hypergraph} is denoted by $H=(V;\mathcal{E})$, where $V$ is a set of vertices and $\mathcal{E}$ is a set of hyperedges. Each hyperedge joins any number of vertices.
 
 \begin{figure}[ht]
     \centering
@@ -157,8 +164,9 @@ In order to measure the cost of cycling, we can look at the cost of the shortest
 \begin{algorithm}
 \caption{Dijkstra's Algorithm}\label{alg:dijkstra}
 \begin{algorithmic}
-\Function{Dijkstra}{Graph, source}
-    \For{$v$ in $Graph.Vertices$}
+\Function{Dijkstra}{$Graph$, $source$}
+    \State let $Graph = (V, E, W)$
+    \For{$v$ in $V$}
         \State $dist[v]\gets \infty$
         \State $prev[v]\gets undefined$
         \State add $v$ to $Q$
@@ -168,7 +176,7 @@ In order to measure the cost of cycling, we can look at the cost of the shortest
         \State $u\gets$ vertex in $Q$ with min $dist[u]$
         \State remove $u$ from $Q$
         \For{neighbour $v$ of $u$ still in $Q$}
-            \State $alt \gets dist[u] + Graph.Edges(u, v)$
+            \State $alt \gets dist[u] + E(u, v)$
             \If{$alt < dist[v]$}
                 \State $dist[v]\gets alt$
                 \State $prev[v]\gets u$
@@ -253,7 +261,7 @@ There are other maps that can be used to show bike lanes. For example, Google Ma
     \label{fig:cycleway_query}
 \end{figure}
 
-One disadvantage of Google Maps is that it is not open data. On the other hand, OpenStreetMap is open data, and it provides much more detailed information regarding bicycle infrastructure. The OpenStreetMap website~\cite{OpenStreetMap} allows users to query features at any point on the map. Figure~\ref{fig:feature_query} shows an example of queried features. Details of each feature can be viewed by clicking the blue text. For example, ``Viaduct Walk" is a link to the information page of Viaduct Walk (Figure~\ref{fig:cycleway_query}). It contains a series of tags which specify useful information such as the type of the road, whether pedestrians are allowed and whether it is one-way. It also contains a list of nodes which are on the path. Such information can be helpful for deciding whether a road is cycle-friendly.
+One disadvantage of Google Maps is that it is not open data. On the other hand, OpenStreetMap is open data, and it provides much more detailed information regarding bicycle infrastructure. The OpenStreetMap website~\cite{OpenStreetMap} allows users to query features at any point on the map. Figure~\ref{fig:feature_query} shows an example of queried features. Details of each feature can be viewed by clicking the blue text. For example, \textit{Viaduct Walk} is a link to the information page of Viaduct Walk (Figure~\ref{fig:cycleway_query}). It contains a series of tags which specify useful information such as the type of the road, whether pedestrians are allowed and whether it is one-way. It also contains a list of nodes which are on the path. Such information can be helpful for deciding whether a road is cycle-friendly.
 
 \subsection{Overpass API}
 OpenStreetMap exposes its data through an API, \textit{Overpass API}~\cite{wiki:overpass}. This API means it is feasible to automate our system. It allows nodes, ways and relations to be queried according to a well-documented query language, \textit{Overpass QL}~\cite{wiki:overpassql}. 
@@ -270,33 +278,41 @@ We could also query each OSM element by ID. To get the information associated wi
     way(151283936);
     out;
 \end{verbatim}
-where 151283936 is the element ID of Viaduct Walk. This query returns the following data:
-\begin{verbatim}
-    <way id="151283936">
-        <nd ref="297685799"/>
-        <nd ref="9097834868"/>
-        <nd ref="9356781484"/>
-        <nd ref="9356781485"/>
-        <nd ref="287216154"/>
-        <nd ref="1479980590"/>
-        <nd ref="9356781486"/>
-        <nd ref="1479980462"/>
-        <nd ref="287216155"/>
-        <nd ref="985936350"/>
-        <nd ref="9356781487"/>
-        <nd ref="9356781488"/>
-        <nd ref="287216156"/>
-        <nd ref="1478202890"/>
-        <nd ref="1478202850"/>
-        <nd ref="1478203126"/>
-        <tag k="foot" v="yes"/>
-        <tag k="highway" v="cycleway"/>
-        <tag k="lcn" v="yes"/>
-        <tag k="name" v="Viaduct Walk"/>
-        <tag k="oneway" v="no"/>
-        <tag k="surface" v="asphalt"/>
-    </way>
-\end{verbatim}
+where 151283936 is the element ID of Viaduct Walk. This query returns the data in Figure~\ref{fig:query}.
+
+\begin{figure}[ht]
+    \centering
+    \begin{minipage}[c]{\textwidth}
+        \begin{verbatim}
+            <way id="151283936">
+                <nd ref="297685799"/>
+                <nd ref="9097834868"/>
+                <nd ref="9356781484"/>
+                <nd ref="9356781485"/>
+                <nd ref="287216154"/>
+                <nd ref="1479980590"/>
+                <nd ref="9356781486"/>
+                <nd ref="1479980462"/>
+                <nd ref="287216155"/>
+                <nd ref="985936350"/>
+                <nd ref="9356781487"/>
+                <nd ref="9356781488"/>
+                <nd ref="287216156"/>
+                <nd ref="1478202890"/>
+                <nd ref="1478202850"/>
+                <nd ref="1478203126"/>
+                <tag k="foot" v="yes"/>
+                <tag k="highway" v="cycleway"/>
+                <tag k="lcn" v="yes"/>
+                <tag k="name" v="Viaduct Walk"/>
+                <tag k="oneway" v="no"/>
+                <tag k="surface" v="asphalt"/>
+            </way>
+        \end{verbatim}
+    \end{minipage}
+    \caption{Query result of Viaduct Walk}
+    \label{fig:query}
+\end{figure}
 
 We have access to the list of nodes on Viaduct Walk as well as the tags associated with it. Tags such as \texttt{highway=cycleway} are likely to be helpful in deciding whether an OSM way is cycle-friendly.
 
@@ -402,25 +418,26 @@ The area can be specified by two things: the \textit{node ID} of the town or cit
 \subsection{Cycle-friendly heuristics} \label{sec:cycle_heuristic}
 A heuristic function was designed to give a score to an OSM way depending on the tags associated with it to represent how cycle-friendly it is. The score was calculated by
 \begin{equation}\label{eq:heuristic}
-    h(way) = \frac{\sum_{t\in way.tags} t.key.weight \times t.value.score}{\sum_{t\in way.tags} t.key.weight}
+    h(way) = \frac{\sum_{t\in way.tags} w_t \times s_t}{\sum_{t\in way.tags} w_t}
 \end{equation}
+where each tag $t$ is a key-value pair, $w_t$ is the weight assigned to tag $t$, $s_t$ is the score gained for tag $t$ to take its value, and $h(way)$ is the score given to the OSM way. This is essentially a weighted average of tag value scores, and both $w_t$ and $s_t$ are configurable. 
 
-where each tag $t$ is a key-value pair, $t.key.weight$ is the weight assigned to tag $t$, $t.value.score$ is the score gained for tag $t$ to take value $t.value$, and $h(way)$ is the score given to the OSM way. This is essentially a weighted average of tag value scores, and both $t.key.weight$ and $t.value.score$ are configurable. Suppose in the configuration file we have two tags, \textit{cycleway} and \textit{smoothness}. We specify that the weight assigned to each tag is
+Suppose in the configuration file we have two tags, \textit{cycleway} and \textit{smoothness}. We specify that the weight assigned to each tag is
 \begin{align*}
-    cycleway.weight &= 1 \\
-    smoothness.weight &= 0.5
+    w_{cycleway} &= 1 \\
+    w_{smoothness} &= 0.5
 \end{align*}
 
 And the score assigned to each tag value is
 \begin{align*}
-    cycleway[track].score &= 1 \\
-    cycleway[share\_busway].score &= 0.6 \\
-    smoothness[excellent].score &= 1 \\
-    smoothness[intermediate].score &= 0.4
+    score(cycleway,\, track) &= 1 \\
+    score(cycleway,\, share\_busway) &= 0.6 \\
+    score(smoothness,\, excellent) &= 1 \\
+    score(smoothness,\, intermediate) &= 0.4
 \end{align*}
 
 Now suppose we have an OSM way with the following tags:
-\[cycleway=track, smoothness=intermediate\]
+\[cycleway=track,\quad smoothness=intermediate\]
 
 The heuristic function should return
 \begin{align*}
@@ -457,15 +474,15 @@ The model needs access to all the OSM ways as well as all the nodes on each way 
 
 The OSM ways in the area were stored in \texttt{Result.ways}, which is a list of \texttt{Way} objects. To get all the nodes on a given way, the \texttt{Way} object provides a \texttt{get\_nodes} method. The longitude and latitude of a node can be accessed by \texttt{Node.lon} and \texttt{Node.lat}.
 
-It should be noted that when querying data within a bounding box, the returned \texttt{Way} may not be completely inside the bounding box. This means that when we fetch all the nodes on a given way, some nodes may be outside the bounding box. To keep the graph clean and focused, we would like to disregard nodes that are outside the boundary.
+It should be noted that when querying data within a bounding box, the returned \texttt{Way} may not be completely inside the bounding box, since Overpass API would return all the ways including the ones that are only partly inside the boundary. This means that when we fetch all the nodes on a given way, some nodes may be outside the bounding box. To keep the graph clean and focused, we would like to disregard nodes that are outside the boundary.
 
 \section{Model}
 The model layer handles the filtering of OSM ways. Since we were interested in the cycle-friendly subgraph, we implemented a heuristic function that gives a cycle-friendly score to each way by analysing the tags associated with it, as defined in Equation \ref{eq:heuristic}.
 
 Two data classes, \texttt{Tag} and \texttt{WeightedTags}, were created to store the weighting of the tags. \texttt{Tag} has two attributes:
 \begin{itemize}
-    \item \texttt{weight}, which is a float representing the tag weight (\textit{t.key.weight})
-    \item \texttt{values}, which maps each tag value to a score (\textit{t.value.score})
+    \item \texttt{weight}, which is a float representing the tag weight
+    \item \texttt{values}, which maps each tag value to a score
 \end{itemize}
 
 On the other hand, \texttt{WeightedTags} stores a mapping from a tag key to a \texttt{Tag}. It also provides a method, \texttt{weight\_sum}, which calculates the sum of weight for all the tags. These data classes facilitated the implementation of Equation \ref{eq:heuristic}. With the score function, we could select cycle-friendly ways based on a given threshold.
@@ -482,16 +499,16 @@ Then, we can use the \textit{link counter} to convert OSM ways into edges, repre
 \begin{algorithm}
 \caption{An algorithm to convert hyperedges to an adjacency list}\label{alg:adj}
 \begin{algorithmic}
-\Require $hyperedges, linkCounter$
+\Require $hyperEdges, counter$
 \Ensure $adj$
-\State $adj\gets$ empty dictionary
-\For{$e$ \textbf{in} $hyperedges$}
+\State $adj\gets \emptyset$
+\For{$e$ \textbf{in} $hyperEdges$}
     \State $currentPointer\gets 0$
     \State $currentNode\gets e[currentPointer]$
     \State $nextPointer \gets currentPointer + 1$
-    \While{$nextPointer < size(e)$}
+    \While{$nextPointer < length(e)$}
         \State $nextNode\gets e[nextPointer]$
-        \If{$linkCounter[nextNode] > 1$ \textbf{or} $nextPointer = size(e)-1$}
+        \If{$counter[nextNode] > 1$ \textbf{or} $nextPointer = length(e)-1$}
             \If{$currentNode \neq nextNode$}
                 \State $neighbours\gets$ empty list
                 \If{$currentNode$ \textbf{in} $adj$}
@@ -520,14 +537,14 @@ Two graph libraries, \texttt{NetworkX} and \texttt{python-igraph}, were experime
 \begin{figure}[ht]
     \centering
     \includegraphics[width=0.7\textwidth]{plan_images/igraph.png}
-    \caption{A plot produced by \texttt{python-igraph}}
+    \caption{A plot of St Andrews produced by \texttt{python-igraph}}
     \label{fig:igraph}
 \end{figure}
 
 \begin{figure}[ht]
     \centering
     \includegraphics[width=0.7\textwidth,trim={2.5cm 1.5cm 1.7cm 1.7cm},clip]{plan_images/networkx.png}
-    \caption{A plot produced by \texttt{NetworkX}}
+    \caption{A plot of St Andrews produced by \texttt{NetworkX}}
     \label{fig:networkx}
 \end{figure}
 
@@ -609,6 +626,23 @@ In OpenStreetMap, there is a node representing the centre of St Andrews. Since O
 In Strategy C, we find the nodes that are central within each region. A method called \texttt{NetworkX.centre} was used to obtain the set of central nodes of a graph, where the maximal distance from the central nodes to other nodes in the graph is minimized. We could construct a subgraph for each region and find the central nodes. For simplicity, we took the first returned node as the centre of the region. After that, we ran Dijkstra's algorithm from the central node in region 1 to the central node in region 2.
 
 \section{Testing Approach}
+As our system was implemented in a multi-layer architecture, we were able to test each layer independently. The following python libraries were used for testing:
+\begin{itemize}
+    \item \texttt{unittest}~\cite{unittest}, which is a python framework for unit testing
+    \item \texttt{unittest.mock}~\cite{unittest:mock}, which is used to mock objects
+    \item \texttt{coverage}~\cite{coverage}, which is a tool for measuring test coverage
+\end{itemize}
+
+The testing results are shown in Appendix~\ref{app:test}. In the following sections, we give an overview of how unit testing was carried out for each layer.
+
+\subsection{Data Fetcher}
+Most methods provided in the data fetcher are attribute getters, so unit tests were written to verify the correct attribute was returned by each method. We used mock OSM ways and nodes for testing so that we could set their attributes without the need to make a request to the Overpass API. In addition, the \texttt{patch} decorator was used to create a mock object of the Overpass API, so that the unit tests would not be dependent on the Overpass API server.
+
+\subsection{Model}
+Unit tests were written for each method in model, with edge cases considered where applicable. A mock data fetcher was used when creating the model so that we could focus on the behaviour of model without being affected by the data fetcher. Similar to data fetcher tests, we used mock OSM ways when testing methods such as \texttt{eval\_way}, the heuristic function to give a score to an OSM way. This allows us to configure the tags associated with each way easily, and the method was tested with many configurations.
+
+\subsection{Graph}
+In the graph layer, most of the code were written to display a plot and make function calls to the \texttt{NetworkX} library. It was difficult to write unit tests for graph visualization, and widely-used libraries such as \texttt{NetworkX} are likely to be well-tested. Hence, tests were only written for auxiliary methods in this layer which do not involve plotting or graph analysis in \texttt{NetworkX}.
 
 \chapter{Evaluation}\label{chapter:eval}
 In this chapter, we reflect on the goals and objectives of this project. We first present some plots produced by the system, and we compare our system against other approaches. In addition, we discuss the limitations of our system.
@@ -617,29 +651,20 @@ In this chapter, we reflect on the goals and objectives of this project. We firs
 As discussed in the design and implementation chapters, the system is designed in such a way that the choice of which tags contribute to the cycle-friendly score are the responsibility of the user. A default configuration file was created, using the legend and documentation of CyclOSM~\cite{cycleOSM} as inspiration. CyclOSM uses OpenStreetMap data to highlight cycling infrastructure. Similarly to this project, it utilises the tags of ways, so it is a relatively complete reference for the most important tags to be considered. As mentioned in the context survey, one difficulty with OpenStreetMap is that since different groups of mappers have their own conventions, there are a wide variety of tag-value mappings that represent the same things. As a consequence, CyclOSM does not cover every relevant combination of tags. The extensible configuration means that a local town planner could adapt the system to suit the conventions of the local area.
 
 \section{Cycle-friendly Graph and CyclOSM} \label{sec:eval_osm}
-We compared the cycle-friendly graph generated by our system against CyclOSM~\cite{cycleOSM}. Figure~\ref{fig:cyclosm st andrews} shows the map of St Andrews in CyclOSM, and the map legend is shown in Figure~\ref{fig:cyclosm legend}. The cycle-friendly graph produced using the heuristics we defined is shown in Figure~\ref{fig:cycle friendly graph} (CHANGE FIGURE TO NEW MAP).
+We compared the cycle-friendly graph generated by our system against CyclOSM~\cite{cycleOSM}. Figure~\ref{fig:cyclosm st andrews} shows the map of St Andrews in CyclOSM, and the map legend is shown in Figure~\ref{fig:cyclosm legend}. The cycle-friendly graph produced by our system using the default configuration is shown in Figure~\ref{fig:cycle friendly graph new}.
 
-An earlier produced graph is shown in Figure (INSERT FIGURE - OLD MAP). Upon a closer look at some of the paths we discovered an omission in the CyclOSM view. There are a few streets which have a cycle path where the value for the \texttt{cycleway} tag is \texttt{opposite}, however this value is not considered by CyclOSM. Therefore, this tag was added to the default configuration file, and the more complete cycle-friendly graph was produced.
-
-\begin{figure}[ht]
+\begin{figure}[ht!]
     \centering
     \includegraphics[width=0.9\textwidth]{plan_images/cyclosm_st_andrews.png}
     \caption{CyclOSM of St Andrews}
     \label{fig:cyclosm st andrews}
 \end{figure}
 
-\begin{figure}[ht]
+\begin{figure}[ht!]
     \centering
     \includegraphics[width=0.3\textwidth]{plan_images/cyclosm_legend.png}
     \caption{CyclOSM legend of bicycle infrastructure}
     \label{fig:cyclosm legend}
-\end{figure}
-
-\begin{figure}[ht]
-    \centering
-    \includegraphics[width=0.8\textwidth,trim={2.5cm 1.5cm 1.7cm 1.7cm},clip]{plan_images/cycle_friendly.png}
-    \caption{The cycle-friendly graph generated by our system}
-    \label{fig:cycle friendly graph}
 \end{figure}
 
 \begin{figure}[ht]
@@ -649,14 +674,40 @@ An earlier produced graph is shown in Figure (INSERT FIGURE - OLD MAP). Upon a c
     \label{fig:overlay st andrews}
 \end{figure}
 
-Figure~\ref{fig:overlay st andrews} (CHANGE FIGURE TO NEW MAP) shows the cycle-friendly graph overlaying the CyclOSM of St Andrews. We can see that ways with a separate cycle way and paths designated for bicycles are identified in our plot. On the other hand, the busy main roads such as \textit{North Street} and \textit{South Street} do not appear, which is sensible as they are not very safe to cycle on. We also identified some additional cycle-friendly paths, which fall into two categories: \begin{enumerate}
+\begin{figure}[ht]
+    \centering
+    \begin{subfigure}[ht]{0.7\textwidth}
+        \centering
+        \includegraphics[width=\textwidth,trim={2.5cm 1.5cm 1.7cm 1.7cm},clip]{plan_images/cycle_friendly.png}
+        \caption{Before the configuration was modified}
+        \label{fig:cycle friendly graph old}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[ht]{0.7\textwidth}
+        \centering
+        \includegraphics[width=\textwidth,trim={1cm 1cm 1cm 1cm},clip]{plan_images/cycle_friendly_new.png}
+        \caption{After the configuration was modified}
+        \label{fig:cycle friendly graph new}
+    \end{subfigure}
+       \caption{The cycle-friendly graph generated by our system}
+       \label{fig:cycle friendly graphs}
+\end{figure}
+
+An earlier produced graph is displayed in Figure~\ref{fig:cycle friendly graph old}. Upon a closer look at some of the paths we discovered an omission in the CyclOSM view. There are a few streets which have a cycle path where the value for the \texttt{cycleway} tag is \texttt{opposite}, however this value is not considered by CyclOSM. Therefore, this tag was added to the default configuration file, and the more complete cycle-friendly graph was produced (Figure~\ref{fig:cycle friendly graph new}).
+
+Figure~\ref{fig:overlay st andrews} shows the cycle-friendly graph overlaying the CyclOSM of St Andrews. We can see that ways with a separate cycle way and paths designated for bicycles are identified in our plot. On the other hand, the busy main roads such as \textit{North Street} and \textit{South Street} do not appear, which is sensible as they are not very safe to cycle on. 
+
+We also identified some additional cycle-friendly paths, which fall into two categories: \begin{enumerate}
     \item Roads that have a cycle path but were not highlighted by CyclOSM for the reasons discussed earlier, such as \textit{Greyfriars Garden}.
     \item Roads that do not have a cycle path, but which our heuristic deemed cycle-friendly, such as \textit{Bell Street}. In this case it is a small tertiary road, so it would likely be acceptable for most cyclists to cycle through there.
 \end{enumerate}
 
-Since \textit{Bell Street} connects to \textit{Greyfriars Garden}, it would seem reasonable for cyclists to use this route to go from \textit{South Street} to \textit{North Street} using the existing cycling infrastructure. In CyclOSM, this route is not highlighted. Note that one limitation of our system is that we don't consider direction - \textit{Bell Street} is one way for cyclists as well as cars so it would not be so easy to use this route to go from \textit{North Street} to \textit{South Street}.
+Since \textit{Bell Street} connects to \textit{Greyfriars Garden}, it would seem reasonable for cyclists to use this route to go from \textit{South Street} to \textit{North Street} using the existing cycling infrastructure. This route is not highlighted in CyclOSM, but it is considered cycle-friendly in our plot. Note that one limitation of our system is that we don't consider direction - \textit{Bell Street} is one way for cyclists as well as cars, so it would not be so easy to use this route to go from \textit{North Street} to \textit{South Street}.
+
+\section{Connectivity Analysis}
 
 \section{Application to Other Areas}
+In order to evaluate the scalability of our approach, we have applied the automated process to two other cities: Dundee and Cambridge.
 
 \section{Comparison to Other Approaches}
 % E.g. Doing a survey of cyclists. Would that be more accurate? It would cost more than this method.
@@ -669,30 +720,30 @@ In Section~\ref{sec:aims}, We presented a list of aims and objectives. We will l
 
 \subsection{Primary objectives}
 \begin{enumerate}
-    \item \textbf{Develop an automated process that turns the OpenStreetMap data for an area into a graph annotated with data relevant to cycle accessibility and apply this to St Andrews}
+    \item \textit{Develop an automated process that turns the OpenStreetMap data for an area into a graph annotated with data relevant to cycle accessibility and apply this to St Andrews} - \textbf{fully complete}
 
-    We implemented a three-layer system: a data fetcher to request the OpenStreetMap data, a model to process the data into a graph based on cycling information, and a graph layer to display and analyse the graph. We also provided a script \texttt{main.py} as the entry point to the program, so that the above analysis can happen automatically in one command. This process was applied to the area of St Andrews, as discussed in Section~\ref{sec:eval_osm}. This objective is considered fully complete.
+    We implemented a three-layer system: a data fetcher to request the OpenStreetMap data, a model to process the data into a graph based on cycling information, and a graph layer to display and analyse the graph. We also provided a script \texttt{main.py} as the entry point to the program, so that the above analysis can happen automatically in one command. This process was applied to the area of St Andrews, as discussed in Section~\ref{sec:eval_osm}.
 
-    \item \textbf{Develop a set of configurable heuristics to determine whether a route is cycle friendly}
+    \item \textit{Develop a set of configurable heuristics to determine whether a route is cycle friendly} - \textbf{fully complete}
 
-    A heuristic function was given in Section~\ref{sec:cycle_heuristic}, where the weightings and scores can be configured in \texttt{configuration.json}. In addition, the threshold score for which a way is considered to be cycle-friendly is configurable. This goal is considered fully complete.
+    A heuristic function was given in Section~\ref{sec:cycle_heuristic}, where the weightings and scores can be configured in \texttt{configuration.json}. In addition, the threshold score for which a way is considered to be cycle-friendly is configurable.
 
-    \item \textbf{Apply the heuristics to highlight disconnected components in the cycle-friendly subgraph}
+    \item \textit{Apply the heuristics to highlight disconnected components in the cycle-friendly subgraph}
 
-    \item \textbf{Consider other properties of the graph, such as k-connectivity and induced subgraphs, to produce other findings relevant to cycling}
+    \item \textit{Consider other properties of the graph, such as k-connectivity and induced subgraphs, to produce other findings relevant to cycling}
 
-    \item \textbf{Suggest the most efficient paths to add to increase the connectedness of the subgraph}
+    \item \textit{Suggest the most efficient paths to add to increase the connectedness of the subgraph} - \textbf{fully complete}
 
     We have developed three strategies to suggest new paths, as discussed in Section~\ref{sec:strategies}.
 \end{enumerate}
 
 \subsection{Secondary objectives}
 \begin{enumerate}
-    \item \textbf{Apply this analysis process to another similar area and assess how well the automated process works for areas it was not designed for}
+    \item \textit{Apply this analysis process to another similar area and assess how well the automated process works for areas it was not designed for}
 
-    \item \textbf{Apply the analysis process to a larger area to evaluate the scalability of the technique}
+    \item \textit{Apply the analysis process to a larger area to evaluate the scalability of the technique}
 
-    \item \textbf{Consider the cost of adding new paths when making suggestions}
+    \item \textit{Consider the cost of adding new paths when making suggestions}
 \end{enumerate}
 
 \chapter{Conclusions}\label{chapter:concl}
@@ -703,10 +754,69 @@ In Section~\ref{sec:aims}, We presented a list of aims and objectives. We will l
 \bibliography{diss_refs}
 
 \appendix
-\chapter{Appendix}
-\section{Testing summary}
-\section{User manual}
-\section{Ethics}
+\chapter{Testing summary}\label{app:test}
+\section*{Unit test}
+\begin{lstlisting}
+test_bounding_box (tests.test_config.ConfigTestCase) ... ok
+test_config (tests.test_config.ConfigTestCase) ... ok
+test_config_no_such_area (tests.test_config.ConfigTestCase) ... ok
+test_weighted_tags (tests.test_config.ConfigTestCase) ... ok
+test_get_centre (tests.test_data_fetcher.DataFetcherTestCase) ... ok
+test_get_node_pos_by_ids (tests.test_data_fetcher.DataFetcherTestCase) ... ok
+test_get_nodes_on_ways (tests.test_data_fetcher.DataFetcherTestCase) ... ok
+test_get_ways (tests.test_data_fetcher.DataFetcherTestCase) ... ok
+test_makes_query (tests.test_data_fetcher.DataFetcherTestCase) ... ok
+test_node_in_area_boundary (tests.test_data_fetcher.DataFetcherTestCase) ... ok
+test_node_in_area_false (tests.test_data_fetcher.DataFetcherTestCase) ... ok
+test_node_in_area_true (tests.test_data_fetcher.DataFetcherTestCase) ... ok
+test_preprocessing_fully_connected (tests.test_graph.GraphProcessingTestCase) ... ok
+test_preprocessing_not_fully_connected (tests.test_graph.GraphProcessingTestCase) ... ok
+test_trim_path_many_head_cycles (tests.test_graph.GraphProcessingTestCase) ... ok
+test_trim_path_many_tail_cycles (tests.test_graph.GraphProcessingTestCase) ... ok
+test_trim_path_no_cycle (tests.test_graph.GraphProcessingTestCase) ... ok
+test_trim_path_one_cycle (tests.test_graph.GraphProcessingTestCase) ... ok
+test_count_node_links (tests.test_model.ModelTestCase) ... ok
+test_eval_way_empty_tag (tests.test_model.ModelTestCase) ... ok
+test_eval_way_maxspeed_has_unit (tests.test_model.ModelTestCase) ... ok
+test_eval_way_maxspeed_in_range (tests.test_model.ModelTestCase) ... ok
+test_eval_way_maxspeed_not_in_range (tests.test_model.ModelTestCase) ... ok
+test_eval_way_one_tag (tests.test_model.ModelTestCase) ... ok
+test_eval_way_tag_does_not_exist (tests.test_model.ModelTestCase) ... ok
+test_eval_way_value_does_not_exist (tests.test_model.ModelTestCase) ... ok
+test_get_adj_list (tests.test_model.ModelTestCase) ... ok
+test_get_node_pos (tests.test_model.ModelTestCase) ... ok
+test_get_node_pos_empty (tests.test_model.ModelTestCase) ... ok
+test_ways_to_adj_list (tests.test_model.ModelTestCase) ... ok
+test_ways_to_adj_list_cycle_edge (tests.test_model.ModelTestCase) ... ok
+test_ways_to_adj_list_empty_edge (tests.test_model.ModelTestCase) ... ok
+
+-------------------------------------------------------------------
+Ran 32 tests in 0.176s
+
+OK
+\end{lstlisting}
+
+\section*{Test coverage}
+\begin{lstlisting}
+Name                         Stmts   Miss  Cover
+------------------------------------------------
+scripts/__init__.py              0      0   100%
+scripts/config.py               51      0   100%
+scripts/data_fetcher.py         30      0   100%
+scripts/exception.py             2      0   100%
+scripts/graph.py               109     48    56%
+scripts/model.py                63      0   100%
+tests/__init__.py                0      0   100%
+tests/test_config.py            26      0   100%
+tests/test_data_fetcher.py      61      0   100%
+tests/test_graph.py             54      0   100%
+tests/test_model.py            131      0   100%
+------------------------------------------------
+TOTAL                          527     48    91%
+\end{lstlisting}
+
+\chapter{User manual}
+\chapter{Ethics}
 
 %TC:endignore
 \end{document}
