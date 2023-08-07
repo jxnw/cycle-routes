@@ -30,3 +30,13 @@ To run all unit tests:
 ```commandline
 python -m unittest -v
 ```
+
+To run all unit tests with code coverage:
+```commandline
+coverage run -m unittest
+```
+
+To view the coverage report:
+```commandline
+coverage report -m
+```
