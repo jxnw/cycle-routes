@@ -18,7 +18,7 @@ breaklines=true
 }
 
 \usepackage{graphicx}
-\graphicspath{ {./plan_images/} }
+\graphicspath{ {./diss_images/} }
 
 \begin{document}
 
@@ -106,21 +106,21 @@ A \textit{graph} $G=(V,E)$ is a mathematical structure which consists of a set o
     \centering
     \begin{subfigure}[ht]{0.33\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{plan_images/weighted.png}
+        \includegraphics[width=\textwidth]{diss_images/context/weighted.png}
         \caption{A weighted graph}
         \label{fig:weighted}
     \end{subfigure}
     \hfill
     \begin{subfigure}[ht]{0.32\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{plan_images/directed.png}
+        \includegraphics[width=\textwidth]{diss_images/context/directed.png}
         \caption{A directed graph}
         \label{fig:directed}
     \end{subfigure}
     \hfill
     \begin{subfigure}[ht]{0.32\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{plan_images/undirected.png}
+        \includegraphics[width=\textwidth]{diss_images/context/undirected.png}
         \caption{An undirected graph}
         \label{fig:undirected}
     \end{subfigure}
@@ -132,7 +132,7 @@ Three simple graphs are demonstrated in Figure~\ref{fig:three graphs}. Figure~\r
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.3\textwidth]{plan_images/fanoplane.png}
+    \includegraphics[width=0.3\textwidth]{diss_images/context/fanoplane.png}
     \caption{The Fano plane from Wikipedia~\cite{WikipediaEN:fanoplane}}
     \label{fig:fanoplane}
 \end{figure}
@@ -144,7 +144,7 @@ The \textit{vertex-connectivity} of a graph is defined as the minimum number of 
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.25\textwidth]{plan_images/connectivity.png}
+    \includegraphics[width=0.25\textwidth]{diss_images/context/connectivity.png}
     \caption{A 4-connected graph from Wikipedia~\cite{WikipediaEN:Connectivity}}
     \label{fig:connectivity4}
 \end{figure}
@@ -193,7 +193,7 @@ Consider the graph in Figure~\ref{fig:dijkstra_example}~\cite{abba2022}, we can 
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.5\textwidth]{plan_images/dijkstra.png}
+\includegraphics[width=0.5\textwidth]{diss_images/context/dijkstra.png}
 \caption{An undirected graph taken from freeCodeCamp~\cite{abba2022}}
 \label{fig:dijkstra_example}
 \end{figure}
@@ -214,7 +214,7 @@ Another famous graph algorithm is Prim's algorithm, which finds the minimum span
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.5\textwidth]{plan_images/MST.png}
+\includegraphics[width=0.5\textwidth]{diss_images/context/MST.png}
 \caption{A minimum spanning tree example from Wikipedia~\cite{WikipediaEN:MST}}
 \label{fig:mst_example}
 \end{figure}
@@ -231,14 +231,14 @@ OpenStreetMap~\cite{OpenStreetMap} is an open, user-generated map database. It i
 
 \begin{figure}[ht!]
 \centering
-\includegraphics[width=0.8\textwidth,trim={22cm 10cm 0 0},clip]{plan_images/osm.png}
+\includegraphics[width=0.8\textwidth,trim={22cm 10cm 0 0},clip]{diss_images/context/osm.png}
 \caption{CyclOSM of St Andrews}
 \label{fig:osm_sta}
 \end{figure}
 
 \begin{figure}[ht!]
 \centering
-\includegraphics[width=0.8\textwidth,trim={10cm 0 10cm 5cm},clip]{plan_images/googlemap.png}
+\includegraphics[width=0.8\textwidth,trim={10cm 0 10cm 5cm},clip]{diss_images/context/googlemap.png}
 \caption{Google map of St Andrews}
 \label{fig:google_sta}
 \end{figure}
@@ -249,14 +249,14 @@ There are other maps that can be used to show bike lanes. For example, Google Ma
 
 \begin{figure}[ht!]
     \centering
-    \includegraphics[width=0.7\textwidth,trim={0 8cm 5cm 0},clip]{plan_images/feature.png}
+    \includegraphics[width=0.7\textwidth,trim={0 8cm 5cm 0},clip]{diss_images/context/feature.png}
     \caption{Querying features in OpenStreetMap}
     \label{fig:feature_query}
 \end{figure}
 
 \begin{figure}[ht!]
     \centering
-    \includegraphics[width=0.7\textwidth,trim={0 5cm 5cm 0},clip]{plan_images/cycleway.png}
+    \includegraphics[width=0.7\textwidth,trim={0 5cm 5cm 0},clip]{diss_images/context/cycleway.png}
     \caption{Details of Viaduct Walk}
     \label{fig:cycleway_query}
 \end{figure}
@@ -351,7 +351,7 @@ The system was divided into three layers: a \textbf{data fetcher} layer, a \text
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.5\textwidth]{plan_images/multi_layer.png}
+    \includegraphics[width=0.5\textwidth]{diss_images/design/multi_layer.png}
     \caption{Structure of the system}
     \label{fig:structure}
 \end{figure}
@@ -536,14 +536,14 @@ Two graph libraries, \texttt{NetworkX} and \texttt{python-igraph}, were experime
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.7\textwidth]{plan_images/igraph.png}
+    \includegraphics[width=0.7\textwidth]{diss_images/impl/igraph.png}
     \caption{A plot of St Andrews produced by \texttt{python-igraph}}
     \label{fig:igraph}
 \end{figure}
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.7\textwidth,trim={2.5cm 1.5cm 1.7cm 1.7cm},clip]{plan_images/networkx.png}
+    \includegraphics[width=0.7\textwidth,trim={2.5cm 1.5cm 1.7cm 1.7cm},clip]{diss_images/impl/networkx.png}
     \caption{A plot of St Andrews produced by \texttt{NetworkX}}
     \label{fig:networkx}
 \end{figure}
@@ -553,7 +553,7 @@ We obtained nodes and edges from the OSM data in the model layer, and we would l
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.7\textwidth]{plan_images/graph_layout.png}
+    \includegraphics[width=0.7\textwidth]{diss_images/impl/graph_layout.png}
     \caption{The cycle-friendly graph overlaying the OpenStreetMap}
     \label{fig:graph layout}
 \end{figure}
@@ -567,14 +567,14 @@ There are many other examples in our constructed graph where nodes are very clos
     \centering
     \begin{subfigure}[ht]{0.35\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{plan_images/close_before.png}
+        \includegraphics[width=\textwidth]{diss_images/impl/close_before.png}
         \caption{Before adding geometric edges}
         \label{fig:close before}
     \end{subfigure}
     \hfill
     \begin{subfigure}[ht]{0.35\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{plan_images/close_after.png}
+        \includegraphics[width=\textwidth]{diss_images/impl/close_after.png}
         \caption{After adding geometric edges}
         \label{fig:close after}
     \end{subfigure}
@@ -584,14 +584,14 @@ There are many other examples in our constructed graph where nodes are very clos
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.7\textwidth]{plan_images/osm_close.png}
+    \includegraphics[width=0.7\textwidth]{diss_images/impl/osm_close.png}
     \caption{The corresponding part of Figure~\ref{fig:close example} in OpenStreetMap}
     \label{fig:osm close}
 \end{figure}
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.7\textwidth]{plan_images/googlemap_cross.png}
+    \includegraphics[width=0.7\textwidth]{diss_images/impl/googlemap_cross.png}
     \caption{Google Maps street view of Queen's Terrace}
     \label{fig:google close}
 \end{figure}
@@ -605,7 +605,7 @@ Another approach we considered was to measure the geographical area enclosed by 
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.8\textwidth,trim={2.5cm 1.5cm 1.7cm 1.7cm},clip]{plan_images/components.png}
+    \includegraphics[width=0.8\textwidth,trim={2.5cm 1.5cm 1.7cm 1.7cm},clip]{diss_images/impl/components.png}
     \caption{Connected components in the cycle-friendly graph}
     \label{fig:component}
 \end{figure}
@@ -655,21 +655,21 @@ We compared the cycle-friendly graph generated by our system against CyclOSM~\ci
 
 \begin{figure}[ht!]
     \centering
-    \includegraphics[width=0.9\textwidth]{plan_images/cyclosm_st_andrews.png}
+    \includegraphics[width=0.9\textwidth]{diss_images/eval/cyclosm_st_andrews.png}
     \caption{CyclOSM of St Andrews}
     \label{fig:cyclosm st andrews}
 \end{figure}
 
 \begin{figure}[ht!]
     \centering
-    \includegraphics[width=0.3\textwidth]{plan_images/cyclosm_legend.png}
+    \includegraphics[width=0.3\textwidth]{diss_images/eval/cyclosm_legend.png}
     \caption{CyclOSM legend of bicycle infrastructure}
     \label{fig:cyclosm legend}
 \end{figure}
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.8\textwidth,trim={1cm 1cm 1cm 1cm},clip]{plan_images/overlay_st_andrews.png}
+    \includegraphics[width=0.8\textwidth,trim={1cm 1cm 1cm 1cm},clip]{diss_images/eval/overlay_st_andrews.png}
     \caption{The cycle-friendly graph overlaying the CyclOSM}
     \label{fig:overlay st andrews}
 \end{figure}
@@ -678,14 +678,14 @@ We compared the cycle-friendly graph generated by our system against CyclOSM~\ci
     \centering
     \begin{subfigure}[ht]{0.7\textwidth}
         \centering
-        \includegraphics[width=\textwidth,trim={2.5cm 1.5cm 1.7cm 1.7cm},clip]{plan_images/cycle_friendly.png}
+        \includegraphics[width=\textwidth,trim={2.5cm 1.5cm 1.7cm 1.7cm},clip]{diss_images/eval/cycle_friendly.png}
         \caption{Before the configuration was modified}
         \label{fig:cycle friendly graph old}
     \end{subfigure}
     \hfill
     \begin{subfigure}[ht]{0.7\textwidth}
         \centering
-        \includegraphics[width=\textwidth,trim={1cm 1cm 1cm 1cm},clip]{plan_images/cycle_friendly_new.png}
+        \includegraphics[width=\textwidth,trim={1cm 1cm 1cm 1cm},clip]{diss_images/eval/cycle_friendly_new.png}
         \caption{After the configuration was modified}
         \label{fig:cycle friendly graph new}
     \end{subfigure}
