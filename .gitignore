@@ -164,6 +164,11 @@ notebooks/
 
 ## Bibliography auxiliary files (bibtex/biblatex/biber):
 *.bbl
+*.bcf
+*.blg
+*-blx.aux
+*-blx.bib
+*.run.xml
 
 ## Build tool auxiliary files:
 *.fdb_latexmk
@@ -172,3 +177,17 @@ notebooks/
 *.synctex.gz
 *.synctex.gz(busy)
 *.pdfsync
+
+## Core latex/pdflatex auxiliary files:
+*.aux
+*.lof
+*.log
+*.lot
+*.fls
+*.out
+*.toc
+*.fmt
+*.fot
+*.cb
+*.cb2
+.*.lb

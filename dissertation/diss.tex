@@ -137,7 +137,9 @@ Three simple graphs are demonstrated in Figure~\ref{fig:three graphs}. Figure~\r
     \label{fig:fanoplane}
 \end{figure}
 
-Street maps can be considered as a type of hypergraph, where locations on the map are the vertices and streets joining various locations are the hyperedges. However, most implementations of graph algorithms are designed for graphs instead of hypergraphs. If we create a graph from the street map hypergraph, we can analyse the subgraph which only consists of cycle-friendly routes and identify isolated areas in the subgraph, where there are no connecting edges between the isolated area and other parts of the graph. In the following sections, we present some graph algorithms which can be useful in our task.
+Street maps can be considered as a type of hypergraph, where locations on the map are the vertices and streets joining various locations are the hyperedges. However, most implementations of graph algorithms are designed for graphs instead of hypergraphs. A hypergraph can be converted into a graph when we know the order of the nodes on each hyperedge. We make each hyperedge into a set of edges, where each node along the hyperedge is part of at most two edges: one with its predecessor if it exists, and one with its successor if it exists. This process will create many edges, and to reduce the computational space it may be sensible to disregard the nodes that only appear in one hyperedge, since these nodes are irrelevant for connectivity.
+
+In a street map we do know the order of the nodes along the hyperedges, since each way consists of an ordered list of nodes. Therefore, we can create a graph from the street map hypergraph, and analyse the subgraph which only consists of cycle-friendly routes. We can then identify isolated areas in this subgraph, where there are no connecting edges between the isolated area and other parts of the graph. In the following sections, we present some graph algorithms which can be useful in our task.
 
 \subsection{Connectivity}
 The \textit{vertex-connectivity} of a graph is defined as the minimum number of vertices that need to be removed to result in a disconnected graph, and the \textit{edge-connectivity} of a graph is the minimum number of edges that need to be removed to result in a disconnected graph~\cite{buckley1990distance}. A graph is \textit{k-vertex-connected} if it has vertex-connectivity $k$.
@@ -559,20 +561,18 @@ We obtained nodes and edges from the OSM data in the model layer, and we would l
 \end{figure}
 
 \subsection{Geometric edges}
-A closer look at the constructed graph reveals a problem. Figure~\ref{fig:close before} shows part of the cycle-friendly graph, where the red region is the largest connected component in the graph. We can see that the right most part of the red region appears to be connected to the edge next to it, but they were actually not connected in the graph. Figure~\ref{fig:osm close} shows the corresponding part in OpenSteetMap. Although Lade Braes Walk (vertical red dotted line) and Queen's Terrace (horizontal white solid line) do not share any nodes on OSM, it seems like they do have an intersection, so they should be considered as connected. In addition, Figure~\ref{fig:google close} shows the Google Maps street view of Queen's Terrace, where Lade Braes Walk is clearly accessible.
-
-There are many other examples in our constructed graph where nodes are very close to each other but disconnected, even though in real life it is possible for a cyclist to move from one node to another. To address this, for every pair of nodes that are geographically close to each other, we added an edge to connect them. Conveniently, \texttt{NetworkX} provides a method called \texttt{geometric\_edges} which computes the edge list of node pairs within a certain radius of each other. This radius is configurable in the configuration file. Figure~\ref{fig:close after} shows the graph after connecting close nodes, with radius set to 0.0005. The red region which represents the largest component is now larger, connecting nodes and edges that are nearby.
+A closer look at the constructed graph reveals a problem. Figure~\ref{fig:close before} shows part of the cycle-friendly graph, where the red region is the largest connected component in the graph. We can see that the right most part of the red region appears to be connected to the edge next to it, but they were actually not connected in the graph. Figure~\ref{fig:osm close} shows the corresponding part in OpenSteetMap. Although Lade Braes Walk (vertical red dotted line) and Queen's Terrace (horizontal white solid line) do not share any nodes on OSM, it seems like they do have an intersection, so they should be considered as connected. In addition, Figure~\ref{fig:google close} shows the Google Maps street view of Queen's Terrace, where Lade Braes Walk is clearly accessible. These connections do not always exist on OpenStreetMap because its primary purpose is to render graphical maps where the geographical connections are obvious, so this aspect of data validation is not the highest priority for the mappers.
 
 \begin{figure}[ht]
     \centering
-    \begin{subfigure}[ht]{0.35\textwidth}
+    \begin{subfigure}[ht]{0.45\textwidth}
         \centering
         \includegraphics[width=\textwidth]{diss_images/impl/close_before.png}
         \caption{Before adding geometric edges}
         \label{fig:close before}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[ht]{0.35\textwidth}
+    \begin{subfigure}[ht]{0.45\textwidth}
         \centering
         \includegraphics[width=\textwidth]{diss_images/impl/close_after.png}
         \caption{After adding geometric edges}
@@ -581,6 +581,8 @@ There are many other examples in our constructed graph where nodes are very clos
        \caption{Part of the cycle-friendly graph}
        \label{fig:close example}
 \end{figure}
+
+There are many other examples in our constructed graph where nodes are very close to each other but disconnected, even though in real life it is possible for a cyclist to move from one node to another. To address this, for every pair of nodes that are geographically close to each other, we added an edge to connect them. Conveniently, \texttt{NetworkX} provides a method called \texttt{geometric\_edges} which computes the edge list of node pairs within a certain radius of each other. This radius is configurable in the configuration file. Figure~\ref{fig:close after} shows the graph after connecting close nodes, with radius set to 0.0005. The red region which represents the largest component is now larger, connecting nodes and edges that are nearby.
 
 \begin{figure}[ht]
     \centering
@@ -597,11 +599,11 @@ There are many other examples in our constructed graph where nodes are very clos
 \end{figure}
 
 \subsection{Connected components}
-In order to identify isolated islands in the cycle-friendly graph, we would like to analyse the connected components in the graph. \texttt{NetworkX} provides methods to find connected components, and we are interested in connecting the largest component with the second largest component. There are a few possible definitions of \textit{the largest} component; it could be the component that contains the most number of nodes, or the most number of edges, or the area it spans is the largest. We decided to use area as the metric as it would make the most sense - it is better to connect geographically big areas than to connect small areas with many nodes.
+In order to identify isolated islands in the cycle-friendly graph, we would like to analyse the connected components in the graph. \texttt{NetworkX} provides methods to find connected components, and we are interested in connecting the largest component with the second-largest component. There are a few possible definitions of \textit{the largest} component; it could be the component that contains the most nodes, the most edges, the largest geographical area or one with the largest total edge length. We decided to use edge length as the metric because that metric is an exact measurement of the cycle-friendly infrastructure, and doesn't suffer if there is a variation in the density of nodes between components.
 
-Now the question becomes, how do we measure the area of a component? We adapted a simple but effective method: for each component, we compute the total length of all the edges inside the component. The longer the edges are, the more likely it is that the component is going to span across a big area. Then, we sorted the connected components using this criterion and identified the two largest component, as demonstrated in Figure~\ref{fig:component}.
+In order to calculate the total edge length for each component, we first compute the total length of all the edges inside the component. Then, we sort the connected components using this criterion and identify the two largest component, as demonstrated in Figure~\ref{fig:component}.
 
-Another approach we considered was to measure the geographical area enclosed by the component. This was challenging because the formulae for calculating the area of an irregular polygon assume that its boundary is known. However, we have a large collection of nodes, and it is difficult to distinguish which nodes are on the boundary and which are not. One possible way to find the boundary was to take the extreme compass points, i.e. the nodes with the greatest and least longitude and latitude. The problem with this approach was that we may not always end up with more than two nodes, for example, when the north-most node is also the east-most node, and the south-most node is also the west-most node. In this case, the nodes would form a line which has no area.
+Another approach we considered was to measure the geographical area enclosed by the component, as this may correlate better with the number of people who can utilise the cycling infrastructure. This was challenging to measure accurately because the formulae for calculating the area of an irregular polygon assume that its boundary is known. However, we have a large collection of nodes, and it is difficult to distinguish which nodes are on the boundary and which are not. One possible way to find the boundary is to take the extreme compass points, i.e. the nodes with the greatest and least longitude and latitude. The problem with this approach is that we may not always end up with more than two nodes, for example, when the north-most node is also the east-most node, and the south-most node is also the west-most node. In this case, the nodes would form a line which has no area.
 
 \begin{figure}[ht]
     \centering
@@ -642,7 +644,7 @@ Most methods provided in the data fetcher are attribute getters, so unit tests w
 Unit tests were written for each method in model, with edge cases considered where applicable. A mock data fetcher was used when creating the model so that we could focus on the behaviour of model without being affected by the data fetcher. Similar to data fetcher tests, we used mock OSM ways when testing methods such as \texttt{eval\_way}, the heuristic function to give a score to an OSM way. This allows us to configure the tags associated with each way easily, and the method was tested with many configurations.
 
 \subsection{Graph}
-In the graph layer, most of the code were written to display a plot and make function calls to the \texttt{NetworkX} library. It was difficult to write unit tests for graph visualization, and widely-used libraries such as \texttt{NetworkX} are likely to be well-tested. Hence, tests were only written for auxiliary methods in this layer which do not involve plotting or graph analysis in \texttt{NetworkX}.
+In the graph layer, most of the code were written to display a plot or were direct wrappers of functions in the \texttt{NetworkX} library. It was difficult to write unit tests for graph visualization, and widely-used libraries such as \texttt{NetworkX} are likely to be well-tested. Hence, tests were only written for auxiliary methods in this layer which do not involve plotting or graph analysis in \texttt{NetworkX}.
 
 \chapter{Evaluation}\label{chapter:eval}
 In this chapter, we reflect on the goals and objectives of this project. We first present some plots produced by the system, and we compare our system against other approaches. In addition, we discuss the limitations of our system.
@@ -674,11 +676,11 @@ We compared the cycle-friendly graph generated by our system against CyclOSM~\ci
     \label{fig:overlay st andrews}
 \end{figure}
 
-\begin{figure}[ht]
+\begin{figure}[ht!]
     \centering
     \begin{subfigure}[ht]{0.7\textwidth}
         \centering
-        \includegraphics[width=\textwidth,trim={2.5cm 1.5cm 1.7cm 1.7cm},clip]{diss_images/eval/cycle_friendly.png}
+        \includegraphics[width=\textwidth,trim={2.5cm 1.5cm 1.7cm 1.7cm},clip]{diss_images/eval/cycle_friendly_old.png}
         \caption{Before the configuration was modified}
         \label{fig:cycle friendly graph old}
     \end{subfigure}
@@ -705,6 +707,53 @@ We also identified some additional cycle-friendly paths, which fall into two cat
 Since \textit{Bell Street} connects to \textit{Greyfriars Garden}, it would seem reasonable for cyclists to use this route to go from \textit{South Street} to \textit{North Street} using the existing cycling infrastructure. This route is not highlighted in CyclOSM, but it is considered cycle-friendly in our plot. Note that one limitation of our system is that we don't consider direction - \textit{Bell Street} is one way for cyclists as well as cars, so it would not be so easy to use this route to go from \textit{North Street} to \textit{South Street}.
 
 \section{Connectivity Analysis}
+We applied the automated process to analyse the cycling infrastructure in St Andrews. In the following sections, we will discuss the results from graph analysis.
+
+\subsection{Components}\label{sec:components}
+Our process has identified 15 components in the St Andrews cycle-friendly graph. The components are highlighted in Figure~\ref{fig:components st andrews}. We have one large component, and lots of smaller components. The empty space at the north of the graph comprises the centre of St Andrews, while the filled-in part to the south and west comprises the bulk of the quieter residential areas and the university. This suggests that it is hard to cycle around the centre of St Andrews, but easy to cycle around the residential neighbourhoods and the university. Therefore, at a glance it might make sense for the town planners to focus on improving cycling infrastructure in the town centre. Since the second largest cycle-friendly component is along the north shore, our system will be likely to suggest paths that will connnect these components through the town centre.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.7\textwidth,trim={1cm 1cm 1cm 1cm},clip]{diss_images/eval/components_st_andrews.png}
+    \caption{The components in the cycle-friendly graph of St Andrews}
+    \label{fig:components st andrews}
+\end{figure}
+
+\subsection{Suggested paths}\label{sec:paths}
+The cycle path additions suggested by our system are highlighted in yellow in Figure~\ref{fig:path st andrews}. As might be expected from the initial conditions given to each approach, strategy A chose the shortest connection along the east edge, utilizing North Castle Street. Strategy B chose a route through the centre of St Andrews, and strategy C connected the University Area through to the northern shore. These results highlight the trade-offs inherent to town planning. Strategy A might be the cheapest, but it won't benefit a large number of people, while strategies B and C each favour different groups. It would benefit students the most to improve cycling connections from the university to the centre, whereas normal residents would greatly benefit from a less dangerous approach into town. Our system can give town planners concrete suggestions of routes they could plan, and they can select different strategies to use based on their priorities for improvements.
+
+\begin{figure}[ht]
+    \centering
+    \begin{subfigure}[ht]{0.6\textwidth}
+        \centering
+        \includegraphics[width=\textwidth,trim={1cm 1cm 1cm 1cm},clip]{diss_images/eval/overall_st_andrews.png}
+        \caption{Path suggested by strategy A (overall)}
+        \label{fig:overall st andrews}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[ht]{0.6\textwidth}
+        \centering
+        \includegraphics[width=\textwidth,trim={1cm 1cm 1cm 1cm},clip]{diss_images/eval/centre_st_andrews.png}
+        \caption{Path suggested by strategy B (town centre)}
+        \label{fig:centre st andrews}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[ht]{0.6\textwidth}
+        \centering
+        \includegraphics[width=\textwidth,trim={1cm 1cm 1cm 1cm},clip]{diss_images/eval/local_st_andrews.png}
+        \caption{Path suggested by strategy C (local centre)}
+        \label{fig:local st andrews}
+    \end{subfigure}
+       \caption{Path to improve the cycling infrastructure in St Andrews}
+       \label{fig:path st andrews}
+\end{figure}
+
+\subsection{Graph metrics}
+As mentioned in the context survey, a common metric of connectedness of a graph is \textit{k-connectivity}. This specifies the minimum number of edges or nodes that could be removed in order for a graph to no longer be connected. The higher the \textit{k-connectivity}, the more connected the graph is. The connectivity of the original graph of St Andrews is 1, before we do the cycle-friendly processing. This is likely because there are some nodes in dead ends where there is only one route to access them, so removing that one edge will make the graph not connected. Once we apply the cycle-friendly heuristic, the connectivity of the graph becomes 0, because the cycle-friendly graph is not connected and has many components. This suggests that \textit{k-connectivity} may not be the best measure of connectedness of the cycle-friendly graph.
+
+A related measure is called \textit{average node connectivity}. This may be a better metric than \textit{k-connectivity} because it is not as affected by individual cases and works even when the graph is not completely connected. We consider, for each pair of nodes, the minimum number of edges that could be removed in order for the nodes to not have a connecting path. We then take the \textit{average node connectivity} to be the mean value of this metric. It is infeasible to run this algorithm on the original graph because there are too many nodes and the algorithm scales quadratically. However, it is feasible to run this on the cycle-friendly graph.
+
+The \textit{average node connectivity} of the cycle-friendly graph was 0.946, before we add any new paths to it. This is less than one because, if nodes are in different components, no edges need to be removed to make them disconnected, as they are already disconnected. After connecting the two largest components using any of the three strategies, the \textit{average node connectivity} increased to 0.998. The same value was given by each strategy, because we were only adding one path to connect the same components. It would be interesting to see if we would see greater improvements in \textit{average node connectivity} when we added a new region, or if it is better to improve connections within the largest cycle-friendly region. This will likely depend on the characteristics of the graph concerned, so it may vary by each geographical area's cycling infrastructure.
 
 \section{Application to Other Areas}
 In order to evaluate the scalability of our approach, we have applied the automated process to two other cities: Dundee and Cambridge.
@@ -728,13 +777,15 @@ In Section~\ref{sec:aims}, We presented a list of aims and objectives. We will l
 
     A heuristic function was given in Section~\ref{sec:cycle_heuristic}, where the weightings and scores can be configured in \texttt{configuration.json}. In addition, the threshold score for which a way is considered to be cycle-friendly is configurable.
 
-    \item \textit{Apply the heuristics to highlight disconnected components in the cycle-friendly subgraph}
+    \item \textit{Apply the heuristics to highlight disconnected components in the cycle-friendly subgraph} - \textbf{fully complete}
+    
+    We applied the heuristics to St Andrews and identified the components in the cycle-friendly graph, as discussed in Section~\ref{sec:components}.
 
     \item \textit{Consider other properties of the graph, such as k-connectivity and induced subgraphs, to produce other findings relevant to cycling}
 
     \item \textit{Suggest the most efficient paths to add to increase the connectedness of the subgraph} - \textbf{fully complete}
 
-    We have developed three strategies to suggest new paths, as discussed in Section~\ref{sec:strategies}.
+    We have developed three strategies to suggest new paths, as discussed in Section~\ref{sec:strategies}. The suggested paths for St Andrews are presented in Section~\ref{sec:paths}.
 \end{enumerate}
 
 \subsection{Secondary objectives}
