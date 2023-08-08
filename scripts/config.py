@@ -65,7 +65,6 @@ class Config:
     threshold: float
     neighbour_eps: float
     strategies: Dict[str, bool]
-    zero_cost: bool
     bounding_box: BoundingBox
     weighted_tags: WeightedTags
 
@@ -81,7 +80,6 @@ class Config:
             threshold=data.get('threshold'),
             neighbour_eps=data.get('neighbourEps'),
             strategies=data.get('strategies'),
-            zero_cost=data.get('zeroCostExistingPath'),
             bounding_box=BoundingBox.from_dict(data.get('boundingBoxes').get(area)),
             weighted_tags=WeightedTags(data.get('weightedTags'))
         )

@@ -10,7 +10,7 @@ from scripts.model import Model
 def main():
     parser = argparse.ArgumentParser(description='PICI - A planner for improving cycling infrastructure.')
     parser.add_argument('--config', type=str, default='configuration.json', help='path to the configuration file')
-    parser.add_argument('--save', type=str, default='../images/', help='save the generated graphs to a directory')
+    parser.add_argument('--save', type=str, default='images/', help='save the generated graphs to a directory')
 
     args = parser.parse_args()
 
@@ -25,8 +25,8 @@ def main():
     graph = GraphProcessing(model)
 
     components = graph.preprocessing()
-    graph.display(filepath=os.path.join(root, args.save, 'cycle_friendly.png'))
-    graph.display(components, filepath=os.path.join(root, args.save, 'components.png'))
+    graph.display(filepath=os.path.join(root, args.save, 'cycle_friendly.svg'))
+    graph.display(components, filepath=os.path.join(root, args.save, 'components.svg'))
 
     if len(components) < 2:
         print('Graph is fully connected, no paths suggested')
@@ -37,17 +37,22 @@ def main():
         if strategies.get('overall', False):
             dist, path = graph.shortest_path_overall(region_from, region_to)
             graph.display_path_between_subgraph(path, region_from, region_to,
-                                                filepath=os.path.join(root, args.save, 'path_overall.png'))
+                                                filepath=os.path.join(root, args.save, 'path_overall.svg'))
 
         if strategies.get('centreTown', False):
             dist, path = graph.shortest_path_town_centre(region_from, region_to)
             graph.display_path_between_subgraph(path, region_from, region_to,
-                                                filepath=os.path.join(root, args.save, 'path_town_centre.png'))
+                                                filepath=os.path.join(root, args.save, 'path_town_centre.svg'))
 
         if strategies.get('centreLocal', False):
             dist, path = graph.shortest_path_local_centre(region_from, region_to)
             graph.display_path_between_subgraph(path, region_from, region_to,
-                                                filepath=os.path.join(root, args.save, 'path_local_centre.png'))
+                                                filepath=os.path.join(root, args.save, 'path_local_centre.svg'))
+
+        if strategies.get('existing', False):
+            dist, path = graph.shortest_path_existing(region_from, region_to)
+            graph.display_path_between_subgraph(path, region_from, region_to,
+                                                filepath=os.path.join(root, args.save, 'path_existing.svg'))
 
 
 if __name__ == '__main__':

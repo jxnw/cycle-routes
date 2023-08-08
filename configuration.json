@@ -5,9 +5,9 @@
 	"strategies": {
 		"overall": true,
 		"centreTown": true,
-		"centreLocal": true
+		"centreLocal": true,
+		"existing": true
 	},
-	"zeroCostExistingPath": false,
 	"boundingBoxes": {
 		"StAndrews": {
 			"nodeId": 21511530,

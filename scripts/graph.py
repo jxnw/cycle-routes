@@ -21,26 +21,16 @@ class GraphProcessing:
         self.graph_unfiltered = nx.Graph(adj_list_unfiltered)
         self.graph = nx.Graph(adj_list)
 
+        self.edge_length = {edge: self.get_edge_length(edge) for edge in self.graph_unfiltered.edges}
+
     def preprocessing(self):
-        edge_length = {edge: self.get_edge_length(edge) for edge in self.graph_unfiltered.edges}
         nx.set_node_attributes(self.graph_unfiltered, self.layout, 'pos')
-        nx.set_edge_attributes(self.graph_unfiltered, edge_length, 'length')
+        nx.set_edge_attributes(self.graph_unfiltered, self.edge_length, 'length')
         nx.set_node_attributes(self.graph, self.layout, 'pos')
-        nx.set_edge_attributes(self.graph, edge_length, 'length')
-
+        nx.set_edge_attributes(self.graph, self.edge_length, 'length')
         self.connect_close_nodes()
-        sorted_groups = self.get_connected_components()
-
-        if self.config.zero_cost:
-            edge_length = self.set_zero_cost(edge_length)
-            nx.set_edge_attributes(self.graph_unfiltered, edge_length, 'length')
+        sorted_groups = self.get_connected_components(self.graph)
         return sorted_groups
-
-    def set_zero_cost(self, edge_length: Dict[Tuple[int, int], float]):
-        for edge in edge_length.keys():
-            if edge in self.graph.edges:
-                edge_length[edge] = 0
-        return edge_length
 
     def shortest_path_overall(self, from_region: Set[int], to_region: Set[int]):
         """
@@ -80,8 +70,34 @@ class GraphProcessing:
         shortest_path_edges = [(shortest_path[i], shortest_path[i + 1]) for i in range(len(shortest_path) - 1)]
         return dist, self.trim_path(shortest_path_edges, from_region, to_region)
 
-    def get_connected_components(self) -> List[Set[int]]:
-        return sorted(nx.connected_components(self.graph), key=self.group_size, reverse=True)
+    def shortest_path_existing(self, from_region: Set[int], to_region: Set[int]):
+        """
+        Find the shortest path between any node in from_region and any node in to_region, with path cost of
+        existing cycle-friendly paths set to zero.
+        """
+        graph_unfiltered_copy = self.graph_unfiltered.copy()
+        edge_length = self.set_zero_cost(self.edge_length)
+        nx.set_edge_attributes(graph_unfiltered_copy, edge_length, 'length')
+
+        dist = float('inf')
+        shortest_path = []
+        for target in to_region:
+            dist_temp, path = nx.multi_source_dijkstra(graph_unfiltered_copy, from_region, target=target,
+                                                       weight='length')
+            if dist_temp < dist:
+                dist = dist_temp
+                shortest_path = path
+        shortest_path_edges = [(shortest_path[i], shortest_path[i + 1]) for i in range(len(shortest_path) - 1)]
+        return dist, self.trim_path(shortest_path_edges, from_region, to_region)
+
+    def set_zero_cost(self, edge_length: Dict[Tuple[int, int], float]):
+        for edge in edge_length.keys():
+            if edge in self.graph.edges:
+                edge_length[edge] = 0
+        return edge_length
+
+    def get_connected_components(self, graph) -> List[Set[int]]:
+        return sorted(nx.connected_components(graph), key=self.group_size, reverse=True)
 
     def get_centre_of_nodes(self, nodes: Set[int]) -> Tuple[float, float]:
         g = nx.subgraph(self.graph, nodes)
