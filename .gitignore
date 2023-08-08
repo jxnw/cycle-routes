@@ -161,6 +161,7 @@ cython_debug/
 
 .DS_Store
 notebooks/
+svg-inkscape/
 
 ## Bibliography auxiliary files (bibtex/biblatex/biber):
 *.bbl
