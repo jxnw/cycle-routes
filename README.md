@@ -12,17 +12,17 @@ source env/bin/activate
 
 To run the program with the default configuration in `scripts/configuration.json`:
 ```commandline
-python scripts/main.py
+python main.py
 ```
 
 Alternatively, the configuration file can be passed as an argument:
 ```commandline
-python scripts/main.py --config path_to_config_file
+python main.py --config path_to_config_file
 ```
 
 To specify the directory to save the generated plot:
 ```commandline
-python scripts/main.py --save path_to_plots
+python main.py --save path_to_plots
 ```
 
 ## Testing
