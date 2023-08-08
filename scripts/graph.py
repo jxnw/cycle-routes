@@ -56,7 +56,8 @@ class GraphProcessing:
         node_to = min(to_region, key=lambda n: self.get_geodesic_distance(self.layout[n], self.centre))
         dist, shortest_path = nx.single_source_dijkstra(self.graph_unfiltered, node_from, node_to, weight='length')
         shortest_path_edges = [(shortest_path[i], shortest_path[i + 1]) for i in range(len(shortest_path) - 1)]
-        return dist, self.trim_path(shortest_path_edges, from_region, to_region)
+        path = self.trim_path(shortest_path_edges, from_region, to_region)
+        return self.get_path_length(path), path
 
     def shortest_path_local_centre(self, from_region: Set[int], to_region: Set[int]):
         """
@@ -68,7 +69,8 @@ class GraphProcessing:
         node_to = min(to_region, key=lambda n: self.get_geodesic_distance(self.layout[n], centre_to))
         dist, shortest_path = nx.single_source_dijkstra(self.graph_unfiltered, node_from, node_to, weight='length')
         shortest_path_edges = [(shortest_path[i], shortest_path[i + 1]) for i in range(len(shortest_path) - 1)]
-        return dist, self.trim_path(shortest_path_edges, from_region, to_region)
+        path = self.trim_path(shortest_path_edges, from_region, to_region)
+        return self.get_path_length(path), path
 
     def shortest_path_existing(self, from_region: Set[int], to_region: Set[int]):
         """
@@ -88,7 +90,8 @@ class GraphProcessing:
                 dist = dist_temp
                 shortest_path = path
         shortest_path_edges = [(shortest_path[i], shortest_path[i + 1]) for i in range(len(shortest_path) - 1)]
-        return dist, self.trim_path(shortest_path_edges, from_region, to_region)
+        path = self.trim_path(shortest_path_edges, from_region, to_region)
+        return self.get_path_length(path), path
 
     def set_zero_cost(self, edge_length: Dict[Tuple[int, int], float]):
         for edge in edge_length.keys():
@@ -150,6 +153,12 @@ class GraphProcessing:
 
     def get_edge_length(self, edge: Tuple[int, int]):
         return self.get_geodesic_distance(self.layout[edge[0]], self.layout[edge[1]])
+
+    def get_path_length(self, path: List[Tuple[int, int]]):
+        length = 0
+        for (u, v) in path:
+            length += self.graph_unfiltered.edges[u, v]['length']
+        return length
 
     @staticmethod
     def get_geodesic_distance(pos1: Tuple[float, float], pos2: Tuple[float, float]):
