@@ -391,7 +391,7 @@ The graph receives an adjacency list from the model. To plot the graph, we need 
 On receiving the layout of nodes, the graph layer computes edge lengths according to node positions. All graph analysis happens in this layer, including path finding and component analysis. It should also provide methods to display and save the plots.
 
 \subsection{Path finding strategies} \label{sec:strategies}
-In Section \ref{sec:aims}, we mentioned that we would like to suggest the most efficient path to add to the graph to improve the connectedness of the cycling network. However, the definition of the \textit{most efficient} path varies depending on what the user needs the most. It could be that the user only wants to find the shortest path that would connect two big components, or maybe it is more important for the new path to be as central as possible. Three strategies with different priorities were designed to suggest paths.
+In Section \ref{sec:aims}, we mentioned that we would like to suggest the most efficient path to add to the graph to improve the connectedness of the cycling network. However, the definition of the \textit{most efficient} path varies depending on what the user needs the most. It could be that the user only wants to find the shortest path that would connect two big components, or maybe it is more important for the new path to be as central as possible. Four strategies with different priorities were designed to suggest paths.
 
 \subsubsection*{Strategy A: Overall shortest path}
 A simple strategy to improve the connectedness of the cycle-friendly subgraph would be to add a path to connect the largest component (region 1) and the second largest component (region 2). Given the graph of the whole area, we search for the shortest path from any node in region 1 to any node in region 2. Making this path cycle-friendly would connect region 1 and region 2 in the cycle-friendly subgraph and hence improving connectedness.
@@ -402,7 +402,10 @@ One potential issue with strategy A is that the suggested path may be located at
 \subsubsection*{Strategy C: Shortest path via local centre}
 Strategy C works in a similar fashion as strategy B. It searches for the shortest path from the most central node in region 1 to the most central node in region 2. However, the most central node in a region does not depend on the centre of the town. Instead, it is defined to be the node closest to the centre of the region, i.e. the centre of the component.
 
-\section{System Configuration}
+\subsubsection*{Strategy D: Using existing cycle paths}
+In this strategy, we set the path cost for pre-existing cycle paths to be zero. This prioritizes using the pre-existing cycling infrastructure rather than spending money adding paths that are not needed. One effect of this approach is that no matter where in a component we start, any new paths suggested using the shortest path approach will be the same. This is because the cost to move anywhere within a cycle-friendly component would be zero. Hence, this can be considered as an extension of strategy A, with different path costs.
+
+\section{System Configuration}\label{sec:config}
 As discussed in Section \ref{sec:aims}, the system should be flexible so that it can be applied to another area. To achieve this, the following attributes were designed to be configurable:
 
 \begin{itemize}
@@ -453,12 +456,12 @@ Tags which do not appear in the configuration file are considered unimportant an
 The heuristic function assigns a cycle-friendly score to each OSM way, and we would like to make the binary decision of whether a way should be classified as cycle-friendly based on its score. We could define a threshold in the configuration file, and consider a way to be cycle-friendly only if it gives a score higher than the threshold. The choice of the threshold value is important. If it is set too high, not many ways will be selected; if it is set too low, not much filtering will happen and the resulting graph will not give much useful information.
 
 \subsection{Strategies}
-User should be able to specify which strategies they prefer to use, as discussed in Section~\ref{sec:strategies}.
+User should be able to specify which strategies they prefer to use, as discussed in Section~\ref{sec:strategies}. The default is to run all strategies on the graph.
 
 \chapter{Implementation}\label{chapter:impl}
-This chapter focuses on the implementation of our system.
+This chapter focuses on the implementation of our system. Sections~\ref{sec:data fetcher impl}, \ref{sec:model impl} and \ref{sec:graph impl} outline the implementation of each layer. Section~\ref{sec:client} discusses the terminal client for the system. Testing was carried out and explained in Section~\ref{sec:testing}.
 
-\section{Data Fetcher}
+\section{Data Fetcher}\label{sec:data fetcher impl}
 All queries to the Overpass API were made in the data fetcher layer. Given the bounding box of an area to be analysed, we are interested in all the nodes and ways within this area. This data could be fetched using the query
 \begin{verbatim}
     nwr(south, west, north, east); out;
@@ -478,7 +481,7 @@ The OSM ways in the area were stored in \texttt{Result.ways}, which is a list of
 
 It should be noted that when querying data within a bounding box, the returned \texttt{Way} may not be completely inside the bounding box, since Overpass API would return all the ways including the ones that are only partly inside the boundary. This means that when we fetch all the nodes on a given way, some nodes may be outside the bounding box. To keep the graph clean and focused, we would like to disregard nodes that are outside the boundary.
 
-\section{Model}
+\section{Model}\label{sec:model impl}
 The model layer handles the filtering of OSM ways. Since we were interested in the cycle-friendly subgraph, we implemented a heuristic function that gives a cycle-friendly score to each way by analysing the tags associated with it, as defined in Equation \ref{eq:heuristic}.
 
 Two data classes, \texttt{Tag} and \texttt{WeightedTags}, were created to store the weighting of the tags. \texttt{Tag} has two attributes:
@@ -529,8 +532,7 @@ Then, we can use the \textit{link counter} to convert OSM ways into edges, repre
 \end{algorithmic}
 \end{algorithm}
 
-
-\section{Graph}
+\section{Graph}\label{sec:graph impl}
 In the graph layer, we construct a graph from vertices and edges provided by the model layer. Two graphs were created: a graph that only consists of cycle-friendly edges, known as the \textit{cycle-friendly graph}, and a graph which consists of all edges regardless of their cycle-friendliness, known as the \textit{city graph}. Our goal was to find a path in the city graph that if it were to be made cycle-friendly, the connectedness of the cycle-friendly graph would improve the most.
 
 \subsection{Choice of graph libraries}
@@ -616,7 +618,7 @@ Another approach we considered was to measure the geographical area enclosed by 
 Our strategies involve running the shortest path algorithm on the graph. This shortest path should reflect on the actual length of the path in the map, which means we have to assign weights to edges. This could be achieved easily if we were provided with the length of each OSM way, but this data is not available on the Overpass API. Hence, we would like to estimate the length of an edge based on node coordinates. Given two nodes, $u$ and $v$, and their coordinates, $u = (u_0, u_1)$ and $v = (v_0, v_1)$, where $u_0, v_0$ is the latitude and $u_1, v_1$ is the longitude, we can compute the geodesic distance between the nodes using \texttt{geopy}~\cite{geopy}, a python package for geocoding. This distance could be used as the weight of the edge $uv$.
 
 \subsection{Strategies}
-Recall that we discussed three strategies in Section~\ref{sec:strategies}. All these strategies involve finding the shortest path. \texttt{NetworkX} provides an implementation of Dijkstra's algorithm, and this was utilized differently for each strategy. 
+Recall that we discussed four strategies in Section~\ref{sec:strategies}. All these strategies involve finding the shortest path. \texttt{NetworkX} provides an implementation of Dijkstra's algorithm, and this was utilized differently for each strategy. 
 
 \subsubsection*{Strategy A: Overall shortest path}
 To find the overall shortest path between two regions, we ran Dijkstra's algorithm from every node in region 1 to every node in region 2. For each path found, we kept track of the length of the path as well as the path itself, in the form of a list of nodes on the path. Each time a shorter path was found, we replaced the stored path with the new shorter path. Eventually, we ended up with the overall shortest path between the two regions.
@@ -625,9 +627,21 @@ To find the overall shortest path between two regions, we ran Dijkstra's algorit
 In OpenStreetMap, there is a node representing the centre of St Andrews. Since OSM nodes have coordinates, we used this to find the nearest node to the centre of St Andrews in each region. The distance from a node to the centre was calculated using the geodesic distance. After finding the most central node for each region, we used Dijkstra's algorithm to compute the shortest path between these nodes.
 
 \subsubsection*{Strategy C: Shortest path via local centre}
-In Strategy C, we find the nodes that are central within each region. A method called \texttt{NetworkX.centre} was used to obtain the set of central nodes of a graph, where the maximal distance from the central nodes to other nodes in the graph is minimized. We could construct a subgraph for each region and find the central nodes. For simplicity, we took the first returned node as the centre of the region. After that, we ran Dijkstra's algorithm from the central node in region 1 to the central node in region 2.
+In strategy C, we find the nodes that are central within each region. A method called \texttt{NetworkX.centre} was used to obtain the set of central nodes of a graph, where the maximal distance from the central nodes to other nodes in the graph is minimized. We could construct a subgraph for each region and find the central nodes. For simplicity, we took the first returned node as the centre of the region. After that, we ran Dijkstra's algorithm from the central node in region 1 to the central node in region 2.
 
-\section{Testing Approach}
+\subsubsection*{Strategy D: Using existing cycle paths}
+In strategy D, we set all pre-existing cycle paths to have zero cost. For every edge in the cycle-friendly graph, we set its edge weight to be zero in the unfiltered graph. Then, we run Dijkstra's algorithm in the same manner as strategy A, in order to obtain the shortest path.
+
+\section{Terminal Client}\label{sec:client}
+A script called \texttt{main.py} was written to provide an entry point to the system, which enables the automation of the cycle infrastructure analysis. The \texttt{argparse} module was used to write the command line interface, and our system allows two arguments:
+\begin{itemize}
+    \item \texttt{--config}, which specifies the path to the configuration file
+    \item \texttt{--save}, which specifies the directory to save the generated graphs
+\end{itemize}
+
+A default configuration file was provided in Appendix~\ref{app:config}, but a user-defined configuration file can be passed to the system. This allows users to run the system on multiple configurations and compare the results easily, without the need to modify a single configuration file repeatedly. Users can also specify where to save the generated plots.
+
+\section{Testing Approach}\label{sec:testing}
 As our system was implemented in a multi-layer architecture, we were able to test each layer independently. The following python libraries were used for testing:
 \begin{itemize}
     \item \texttt{unittest}~\cite{unittest}, which is a python framework for unit testing
@@ -650,10 +664,10 @@ In the graph layer, most of the code were written to display a plot or were dire
 In this chapter, we reflect on the goals and objectives of this project. We first present some plots produced by the system, and we compare our system against other approaches. In addition, we discuss the limitations of our system.
 
 \section{Configuration}
-As discussed in the design and implementation chapters, the system is designed in such a way that the choice of which tags contribute to the cycle-friendly score are the responsibility of the user. A default configuration file was created, using the legend and documentation of CyclOSM~\cite{cycleOSM} as inspiration. CyclOSM uses OpenStreetMap data to highlight cycling infrastructure. Similarly to this project, it utilises the tags of ways, so it is a relatively complete reference for the most important tags to be considered. As mentioned in the context survey, one difficulty with OpenStreetMap is that since different groups of mappers have their own conventions, there are a wide variety of tag-value mappings that represent the same things. As a consequence, CyclOSM does not cover every relevant combination of tags. The extensible configuration means that a local town planner could adapt the system to suit the conventions of the local area.
+As discussed in the design and implementation chapters, the system is designed in such a way that the choice of which tags contribute to the cycle-friendly score are the responsibility of the user. A default configuration file (Appendix~\ref{app:config}) was created using the legend and documentation of CyclOSM~\cite{cycleOSM} as inspiration. CyclOSM uses OpenStreetMap data to highlight cycling infrastructure. Similarly to this project, it utilises the tags of ways, so it is a relatively complete reference for the most important tags to be considered. As mentioned in the context survey, one difficulty with OpenStreetMap is that since different groups of mappers have their own conventions, there are a wide variety of tag-value mappings that represent the same things. As a consequence, CyclOSM does not cover every relevant combination of tags. The extensible configuration means that a local town planner could adapt the system to suit the conventions of the local area.
 
-\section{Cycle-friendly Graph and CyclOSM} \label{sec:eval_osm}
-We compared the cycle-friendly graph generated by our system against CyclOSM~\cite{cycleOSM}. Figure~\ref{fig:cyclosm st andrews} shows the map of St Andrews in CyclOSM, and the map legend is shown in Figure~\ref{fig:cyclosm legend}. The cycle-friendly graph produced by our system using the default configuration is shown in Figure~\ref{fig:cycle friendly graph new}.
+\section{Cycle-friendly Graph and CyclOSM}\label{sec:eval_osm}
+We compared the cycle-friendly graph which was generated by our system against CyclOSM~\cite{cycleOSM}. Figure~\ref{fig:cyclosm st andrews} shows the map of St Andrews in CyclOSM, and the map legend is shown in Figure~\ref{fig:cyclosm legend}. The cycle-friendly graph produced by our system using the default configuration is shown in Figure~\ref{fig:cycle friendly graph new}.
 
 \begin{figure}[ht!]
     \centering
@@ -706,11 +720,11 @@ We also identified some additional cycle-friendly paths, which fall into two cat
 
 Since \textit{Bell Street} connects to \textit{Greyfriars Garden}, it would seem reasonable for cyclists to use this route to go from \textit{South Street} to \textit{North Street} using the existing cycling infrastructure. This route is not highlighted in CyclOSM, but it is considered cycle-friendly in our plot. Note that one limitation of our system is that we don't consider direction - \textit{Bell Street} is one way for cyclists as well as cars, so it would not be so easy to use this route to go from \textit{North Street} to \textit{South Street}.
 
-\section{Connectivity Analysis}
+\section{Connectivity Analysis}\label{sec:connectivity}
 We applied the automated process to analyse the cycling infrastructure in St Andrews. In the following sections, we will discuss the results from graph analysis.
 
 \subsection{Components}\label{sec:components}
-Our process has identified 15 components in the St Andrews cycle-friendly graph. The components are highlighted in Figure~\ref{fig:components st andrews}. We have one large component, and lots of smaller components. The empty space at the north of the graph comprises the centre of St Andrews, while the filled-in part to the south and west comprises the bulk of the quieter residential areas and the university. This suggests that it is hard to cycle around the centre of St Andrews, but easy to cycle around the residential neighbourhoods and the university. Therefore, at a glance it might make sense for the town planners to focus on improving cycling infrastructure in the town centre. Since the second largest cycle-friendly component is along the north shore, our system will be likely to suggest paths that will connnect these components through the town centre.
+Our process has identified 15 components in the St Andrews cycle-friendly graph. The components are highlighted in Figure~\ref{fig:components st andrews}. We have one large component, and lots of smaller components. The empty space at the north of the graph comprises the centre of St Andrews, while the filled-in part to the south and west comprises the bulk of the quieter residential areas and the university. This suggests that it is hard to cycle around the centre of St Andrews, but easy to cycle around the residential neighbourhoods and the university. Therefore, at a glance it might make sense for the town planners to focus on improving cycling infrastructure in the town centre. Since the second largest cycle-friendly component is along the north shore, our system will be likely to suggest paths that will connect these components through the town centre.
 
 \begin{figure}[ht]
     \centering
@@ -749,43 +763,131 @@ The cycle path additions suggested by our system are highlighted in yellow in Fi
 \end{figure}
 
 \subsection{Graph metrics}
-As mentioned in the context survey, a common metric of connectedness of a graph is \textit{k-connectivity}. This specifies the minimum number of edges or nodes that could be removed in order for a graph to no longer be connected. The higher the \textit{k-connectivity}, the more connected the graph is. The connectivity of the original graph of St Andrews is 1, before we do the cycle-friendly processing. This is likely because there are some nodes in dead ends where there is only one route to access them, so removing that one edge will make the graph not connected. Once we apply the cycle-friendly heuristic, the connectivity of the graph becomes 0, because the cycle-friendly graph is not connected and has many components. This suggests that \textit{k-connectivity} may not be the best measure of connectedness of the cycle-friendly graph.
+As mentioned in the context survey, a common metric of connectedness of a graph is \textit{k-connectivity}. This specifies the minimum number of edges or nodes that could be removed in order for a graph to no longer be connected. The higher the k-connectivity, the more connected the graph is. The connectivity of the original graph of St Andrews is 1, before we do the cycle-friendly processing. This is likely because there are some nodes in dead ends where there is only one route to access them, so removing that one edge will make the graph not connected. Once we apply the cycle-friendly heuristic, the connectivity of the graph becomes 0, because the cycle-friendly graph is not connected and has many components. This suggests that k-connectivity may not be the best measure of connectedness of the cycle-friendly graph.
 
-A related measure is called \textit{average node connectivity}. This may be a better metric than \textit{k-connectivity} because it is not as affected by individual cases and works even when the graph is not completely connected. We consider, for each pair of nodes, the minimum number of edges that could be removed in order for the nodes to not have a connecting path. We then take the \textit{average node connectivity} to be the mean value of this metric. It is infeasible to run this algorithm on the original graph because there are too many nodes and the algorithm scales quadratically. However, it is feasible to run this on the cycle-friendly graph.
+A related measure is called \textit{average node connectivity}. This may be a better metric than k-connectivity because it is not as affected by individual cases and works even when the graph is not completely connected. We consider, for each pair of nodes, the minimum number of edges that could be removed in order for the nodes to not have a connecting path. We then take the average node connectivity to be the mean value of this metric. It is infeasible to run this algorithm on the original graph because there are too many nodes and the algorithm scales quadratically. However, it is feasible to run this on the cycle-friendly graph.
 
-The \textit{average node connectivity} of the cycle-friendly graph was 0.946, before we add any new paths to it. This is less than one because, if nodes are in different components, no edges need to be removed to make them disconnected, as they are already disconnected. After connecting the two largest components using any of the three strategies, the \textit{average node connectivity} increased to 0.998. The same value was given by each strategy, because we were only adding one path to connect the same components. It would be interesting to see if we would see greater improvements in \textit{average node connectivity} when we added a new region, or if it is better to improve connections within the largest cycle-friendly region. This will likely depend on the characteristics of the graph concerned, so it may vary by each geographical area's cycling infrastructure.
+The average node connectivity of the cycle-friendly graph was 0.947, before we add any new paths to it. This is less than one because, if nodes are in different components, no edges need to be removed to make them disconnected, as they are already disconnected. After connecting the two largest components using any of the four strategies, the average node connectivity increased to 0.999. The same value was given by each strategy, because we were only adding one path to connect the same components. It would be interesting to see if we would see greater improvements in average node connectivity when we added a new region, or if it is better to improve connections within the largest cycle-friendly region. This will likely depend on the characteristics of the graph concerned, so it may vary by each geographical area's cycling infrastructure.
+
+Another useful graph metric is the \textit{average shortest path length} of a graph. This calculates the shortest path between each pair of nodes, and takes the mean value of the distance of these paths. The smaller this number, the easier it would be to get from one place to another. The metric in its purest form does not directly apply to a disconnected graph, since not all pairs of nodes will have a path between them. To get around this, we assigned a high constant value to be the cost of commuting between two disconnected nodes. Table~\ref{tab:avg path} shows the value of this metric for the unmodified cycle-friendly graph as well as for the graph modified by each of the strategies.
+
+\begin{table}[ht]
+    \centering
+    \begin{tabular}{|c|c|}
+        \hline
+        Graph & Average shortest path length \\
+        \hline
+        original & 4.156 \\
+        strategy A & 3.744 \\
+        strategy B & 3.739 \\
+        strategy C & 3.730 \\
+        strategy D & 3.744 \\
+        \hline
+    \end{tabular}
+    \caption{Comparison of average shortest path length of the graph}
+    \label{tab:avg path}
+\end{table}
+
+Strategy A and D produced the same path in this case, hence why the values for these two strategies are in the same. We can see that strategy C made the biggest difference to average path length, which makes sense because improving the connectivity of the most central node in a region should make a bigger effect on the majority of nodes than improving the connectivity of a node on the outskirts.
 
 \section{Application to Other Areas}
-In order to evaluate the scalability of our approach, we have applied the automated process to two other cities: Dundee and Cambridge.
+In order to evaluate the scalability of our approach, we have applied the automated process to two other cities: Dundee in Scotland and Houten in the Netherlands. Dundee was chosen because it is nearby St Andrews, and it is much larger than St Andrews, so we might get multiple similarly sized regions rather than one big component. Houten was chosen because it is a similar size to St Andrews, but has grown much in recent decades. It has been the subject of urban planning designed to promote bicycle usage over driving.
+
+\subsection{Dundee}
+We can see in Figure (BLEH) that Dundee has many more disconnected components than St Andrews did, and the distribution of the size is much more even. We can see that there are cycle-friendly clusters around the centres of activity in the city, such as Ninewells Hospital, the city centre and waterfront, and the Hilltown.
+
+Our system suggests that the Ninewells Hospital area and the city centre should be the priority for connecting. This is in fact a project that Dundee City Council are undertaking (https://www.thecourier.co.uk/fp/business-environment/transport/3936685/dundee-cycle-routes-our-maps-show-proposed-links-between-city-communities/). The proposed routes from our system are more direct than those proposed by Dundee City Council, which is likely because we didn't take into account changes in elevation, since our suggested routes go through the Balgay Hill area.
+
+\subsubsection*{Graph Metrics}
+Since Dundee is much bigger, it was computationally infeasible to run the average node connectivity algorithm on the produced graph. It was however possible to produce the average shortest path length metrics. 
+
+* MAKE TABLE *
+
+\begin{enumerate}
+    \item Original: 9.485
+    \item Strategy A: 9.360
+    \item Strategy B: 9.275
+    \item Strategy C: 9.341
+    \item Strategy D: 9.274
+\end{enumerate}
+
+In this case strategies B and D had the lowest scores. Their paths started near the large cluster of red nodes, while the paths of strategies A and C started far away from this cluster. Strategy C started far away because the red region is very thinly spread, so the local centre was not actually in the most dense area. Strategy D benefited from including some pre-existing cycle-friendly edges, so it affected more nodes than other strategies.
+
+\begin{figure}[ht]
+    \centering
+    \begin{subfigure}[ht]{0.6\textwidth}
+        \centering
+        \includegraphics[width=\textwidth,trim={1cm 1cm 1cm 1cm},clip]{diss_images/eval/overall_dundee.png}
+        \caption{Path suggested by strategy A (overall)}
+        \label{fig:overall dundee}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[ht]{0.6\textwidth}
+        \centering
+        \includegraphics[width=\textwidth,trim={1cm 1cm 1cm 1cm},clip]{diss_images/eval/centre_dundee.png}
+        \caption{Path suggested by strategy B (town centre)}
+        \label{fig:centre dundee}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[ht]{0.6\textwidth}
+        \centering
+        \includegraphics[width=\textwidth,trim={1cm 1cm 1cm 1cm},clip]{diss_images/eval/local_dundee.png}
+        \caption{Path suggested by strategy C (local centre)}
+        \label{fig:local dundee}
+    \end{subfigure}
+       \caption{Path to improve the cycling infrastructure in Dundee}
+       \label{fig:path dundee}
+\end{figure}
+
+\subsection{Houten}
+The graphs of Houten are shown in Figure (BLEH). We can see that almost the whole town is well-connected for cycling, with only a few places along the outskirts that are not so well connected. This is similar to view when looking at the town through CyclOSM.
+
+\subsubsection*{Graph Metrics}
+Since there are so many cycle-friendly edges in Houten, it was also computationally infeasible to calculate the average node connectivity.
+
+* MAKE TABLE *
+
+\begin{enumerate}
+    \item Original: 1.493
+    \item Strategy A: 1.452
+    \item Strategy B: 1.454
+    \item Strategy C: 1.454
+    \item Strategy D: 1.452
+\end{enumerate}
+
+This time there was little variation in the scores. Strategies A and D suggested the same path, as did strategies B and C. Since Houten already has very good cycling infrastructure, there are not many places that can be connected better, and this reflected in the similar paths of each strategy.
+
+\subsection{Summary}
+Overall, we can see that our system worked when applied to other areas. It created a cycle-friendly subgraph and was able to suggest new routes. Even on a larger area like Dundee, the graph processing time was acceptable, and the suggested path corresponded to a planned project in the city. In a cycle-friendly town like Houten there was not much utility for the system, since there is very little that can be done to make the cycling infrastructure even better. Nevertheless, the graphs produced by the system make clear just how good that town is for cyclists. As discussed before, the best strategy to choose varies based on the characteristics of the town and the priorities of the town planners.
+
+The metric of average node connectivity does not scale well to larger or denser areas, even though it was provided by the NetworkX library. However, the average shortest path metric was calculable for all graphs and paths produced.
+
 
 \section{Comparison to Other Approaches}
 % E.g. Doing a survey of cyclists. Would that be more accurate? It would cost more than this method.
 
 \section{Limitations}
-
+% We don't take into account elevation changes like Dundee City Council did
 
 \section{Success criteria}
 In Section~\ref{sec:aims}, We presented a list of aims and objectives. We will look at each of the objectives in turn to evaluate the success of this project.
 
 \subsection{Primary objectives}
 \begin{enumerate}
-    \item \textit{Develop an automated process that turns the OpenStreetMap data for an area into a graph annotated with data relevant to cycle accessibility and apply this to St Andrews} - \textbf{fully complete}
-
+    \item \textit{Develop an automated process that turns the OpenStreetMap data for an area into a graph annotated with data relevant to cycle accessibility and apply this to St Andrews} - \textbf{fully complete}\\[1mm]
     We implemented a three-layer system: a data fetcher to request the OpenStreetMap data, a model to process the data into a graph based on cycling information, and a graph layer to display and analyse the graph. We also provided a script \texttt{main.py} as the entry point to the program, so that the above analysis can happen automatically in one command. This process was applied to the area of St Andrews, as discussed in Section~\ref{sec:eval_osm}.
 
-    \item \textit{Develop a set of configurable heuristics to determine whether a route is cycle friendly} - \textbf{fully complete}
+    \item \textit{Develop a set of configurable heuristics to determine whether a route is cycle friendly} - \textbf{fully complete}\\[1mm]
+    A heuristic function was given in Section~\ref{sec:cycle_heuristic}, where the weightings and scores can be configured in \texttt{configuration.json}. In addition, the threshold score for which a way is considered to be cycle-friendly is configurable. We discussed system configuration in Section~\ref{sec:config}.
 
-    A heuristic function was given in Section~\ref{sec:cycle_heuristic}, where the weightings and scores can be configured in \texttt{configuration.json}. In addition, the threshold score for which a way is considered to be cycle-friendly is configurable.
-
-    \item \textit{Apply the heuristics to highlight disconnected components in the cycle-friendly subgraph} - \textbf{fully complete}
-    
+    \item \textit{Apply the heuristics to highlight disconnected components in the cycle-friendly subgraph} - \textbf{fully complete}\\[1mm]
     We applied the heuristics to St Andrews and identified the components in the cycle-friendly graph, as discussed in Section~\ref{sec:components}.
 
-    \item \textit{Consider other properties of the graph, such as k-connectivity and induced subgraphs, to produce other findings relevant to cycling}
+    \item \textit{Consider other properties of the graph, such as k-connectivity and induced subgraphs, to produce other findings relevant to cycling} - \textbf{fully complete}\\[1mm]
+    We discussed our findings relevant to connectivity in Section~\ref{sec:connectivity}. We studied the average node connectivity of the graph and the average cost of the shortest paths, and made a comparison before and after we added the suggested path to the cycle-friendly graph.
 
-    \item \textit{Suggest the most efficient paths to add to increase the connectedness of the subgraph} - \textbf{fully complete}
-
-    We have developed three strategies to suggest new paths, as discussed in Section~\ref{sec:strategies}. The suggested paths for St Andrews are presented in Section~\ref{sec:paths}.
+    \item \textit{Suggest the most efficient paths to add to increase the connectedness of the subgraph} - \textbf{fully complete}\\[1mm]
+    We have developed four strategies to suggest new paths, as discussed in Section~\ref{sec:strategies}. The suggested paths for St Andrews are presented in Section~\ref{sec:paths}.
 \end{enumerate}
 
 \subsection{Secondary objectives}
@@ -866,7 +968,123 @@ tests/test_model.py            131      0   100%
 TOTAL                          527     48    91%
 \end{lstlisting}
 
-\chapter{User manual}
+\chapter{Default configuration}\label{app:config}
+\begin{lstlisting}
+{
+	"area": "StAndrews",
+	"threshold": 0.23,
+	"neighbourEps": 0.0005,
+	"strategies": {
+		"overall": true,
+		"centreTown": true,
+		"centreLocal": true
+	},
+	"zeroCostExistingPath": false,
+	"boundingBoxes": {
+		"StAndrews": {
+			"nodeId": 21511530,
+			"south": 56.3279,
+			"west": -2.8265,
+			"north": 56.3438,
+			"east": -2.7833
+		},
+		"Cambridge": {
+			"nodeId": 20971094,
+			"south": 52.1781,
+			"west": 0.0718,
+			"north": 52.2398,
+			"east": 0.1799
+		},
+		"Dundee": {
+			"nodeId": 21262495,
+			"south": 56.4507,
+			"west": -3.0580,
+			"north": 56.4978,
+			"east": -2.9107
+		}
+	},
+	"weightedTags": {
+		"highway": {
+			"weight": 1,
+			"values": {
+				"cycleway": 1,
+				"footway": 0.8,
+				"path": 0.8,
+				"residential": 0.7,
+				"track": 0.7,
+				"tertiary": 0.3,
+				"secondary": 0.2,
+				"primary": 0.1,
+				"service": 0.1
+			}
+		},
+		"bicycle": {
+			"weight": 1,
+			"values": {
+				"designated": 0.8,
+				"yes": 0.8
+			}
+		},
+		"bicycle_road": {
+			"weight": 1,
+			"values": {
+				"yes": 1
+			}
+		},
+		"cycleway": {
+			"weight": 1,
+			"values": {
+				"track": 1,
+				"lane": 0.8,
+				"opposite": 0.8,
+				"shared_lane": 0.6,
+				"share_busway": 0.6,
+				"opposite_share_busway": 0.6
+			}
+		},
+		"maxspeed": {
+			"weight": 0.75,
+			"values": {
+				"0,30": 1
+			}
+		},
+		"surface": {
+			"weight": 0.5,
+			"values": {
+				"paved": 1,
+				"asphalt": 1,
+				"concrete": 1,
+				"paving_stones": 1
+			}
+		},
+		"smoothness": {
+			"weight": 0.5,
+			"values": {
+				"excellent": 1,
+				"good": 1,
+				"intermediate": 1,
+				"bad": 0.5,
+				"very_bad": 0.5
+			}
+		},
+		"segregated": {
+			"weight": 0.25,
+			"values": {
+				"yes": 1,
+				"no": 0.5
+			}
+		},
+		"foot": {
+			"weight": 0.25,
+			"values": {
+				"yes": 1,
+				"designated": 1
+			}
+		}
+	}
+}
+\end{lstlisting}
+
 \chapter{Ethics}
 
 %TC:endignore
