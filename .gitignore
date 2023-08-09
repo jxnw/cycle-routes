@@ -163,6 +163,9 @@ cython_debug/
 .vscode/
 notebooks/
 svg-inkscape/
+plots_st_andrews/
+plots_dundee/
+plots_houten/
 
 ## Bibliography auxiliary files (bibtex/biblatex/biber):
 *.bbl

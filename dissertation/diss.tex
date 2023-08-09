@@ -1,6 +1,7 @@
 \documentclass[12pt,a4paper]{report}
 \usepackage[utf8]{inputenc}
 \usepackage{parskip}
+\usepackage{pdfpages}
 \usepackage{amsmath}
 \usepackage{url}
 \usepackage{caption}
@@ -53,7 +54,7 @@ This project aims to build an automated process to analyse the cycling infrastru
 \chapter*{Declaration}
 I declare that the material submitted for assessment is my own work except where credit is explicitly given to others by citation or acknowledgement. This work was performed during the current academic year except where otherwise stated.
 
-The main text of this project report is NN,NNN words long, including project specification and plan.
+The main text of this project report is 10,153 words long, including project specification and plan.
 
 In submitting this project report to the University of St Andrews, I give permission for it to be made available for use in accordance with the regulations of the University Library. I also give permission for the title and abstract to be published and for copies of the report to be made and supplied at cost to any bona fide library or research worker, and to be made available on the World Wide Web. I retain the copyright in this work.
 
@@ -102,7 +103,7 @@ A list of secondary objectives are considered, with lower priority than the prim
 Chapter \ref{chapter:context} gives an overview of graph theory which is relevant to this project and related work in this area. Chapter \ref{chapter:design} concerns the structure of the system. The implementation of the system is discussed in Chapter \ref{chapter:impl}, with focus on high-level algorithms. In Chapter \ref{chapter:eval}, we evaluate the success and limitations of the system and compare it against existing approaches. Chapter \ref{chapter:concl} summarizes the project and discusses potential future work.
 
 \chapter{Context Survey}\label{chapter:context}
-This project is closely related to graph theory, and research has been done in this field. In Section \ref{sec:graph_theory}, we would look into some important concepts in graph theory. Section \ref{sec:related_work} gives an overview of related work in this area. Tools and libraries that may be relevant to this project are discussed.
+This project is closely related to graph theory, and research has been done in this field. In Section \ref{sec:graph_theory}, we will look into some important concepts in graph theory. Section \ref{sec:related_work} gives an overview of related work in this area. Tools and libraries that may be relevant to this project are discussed.
 
 \section{Graph Theory} \label{sec:graph_theory}
 A \textit{graph} $G=(V,E)$ is a mathematical structure which consists of a set of vertices $V$ and a set of edges $E$, where each edge is a pair of vertices in $V$~\cite{chartrand}. A graph $H$ is called a \textit{subgraph} of $G$ if $V(H) \subseteq V(G)$ and $V(H) \subseteq V(G)$. A \textit{weighted} graph $G=(V,E,W)$ is a graph where each edge is assigned a weight value, and the weight mapping is stored in $W$. A \textit{directed} graph is a graph where each edge is directed, whereas an \textit{undirected} graph is a graph where edges have no direction. A \textit{hypergraph} is denoted by $H=(V;\mathcal{E})$, where $V$ is a set of vertices and $\mathcal{E}$ is a set of hyperedges. Each hyperedge joins any number of vertices.
@@ -161,7 +162,7 @@ Figure~\ref{fig:connectivity4} shows a 4-vertex-connected graph. To separate the
 The more connected the cycle-friendly subgraph is, the easier it is to get around the area with bicycles. An intuition to improve the cycle infrastructure would be to add paths that would increase the connectivity of the graph.
 
 \subsection{Graph traversal}
-If a graph $S$ is a maximal connected subgraph of graph $G$, then $S$ is a $component$ of $G$~\cite{citeulike:395714}. We can analyse the connected components in the cycle-friendly graph and add edges between them to connect smaller cycle-friendly regions into a large cycle-friendly component. The set of components in an undirected graph can be found by traversing the graph. Running a search from a node $n$ will give us all the reachable nodes from $n$, which form a component containing $n$. Therefore, running search algorithms from each unvisited node will yield the set of connected components in a graph.
+If a graph $S$ is a maximally connected subgraph of graph $G$, then $S$ is a $component$ of $G$~\cite{citeulike:395714}. We can analyse the connected components in the cycle-friendly graph and add edges between them to connect smaller cycle-friendly regions into a large cycle-friendly component. The set of components in an undirected graph can be found by traversing the graph. Running a search from a node $n$ will give us all the reachable nodes from $n$, which form a component containing $n$. Therefore, running search algorithms from each unvisited node will yield the set of connected components in a graph.
 
 There are two common examples of search algorithms, namely \textit{breadth-first search} (BFS) and \textit{depth-first search} (DFS). The BFS algorithm works by visiting each node in turn, starting with the closest nodes to origin and keeping the unvisited neighbours in a queue. The DFS algorithm runs in the same way, except it uses a stack to explore each branch in full before backtracking.
 
@@ -323,17 +324,17 @@ where 151283936 is the element ID of Viaduct Walk. This query returns the data i
 
 We have access to the list of nodes on Viaduct Walk as well as the tags associated with it. Tags such as \texttt{highway=cycleway} are likely to be helpful in deciding whether an OSM way is cycle-friendly.
 
-\subsection{Applications of Graph Theory}
+\subsection{Applications of graph theory}
 In this section, we give an overview of how graph theory has been applied to transportation problems. Erath et al.~\cite{erath2009} studied modern measures of the efficiency of transport metrics where they compared cost in the network against the straight-line distance, and showed that parts of the Swiss road network have reached growth limits, where it is hard to improve them any more owing to spatial limitations.
 
 Derrible and Kennedy~\cite{derrible2011} described the history of graph theory with respect to transportation networks, paying particular note to the development of indicators describing the properties of transportation networks. They highlight the \textit{scale-free} concept from network theory, where in some graphs the probability distribution of the number of connections a node has follows a power law and is not related to the number of edges or vertices in the graph. The process for adding cycle-friendly edges outlined in this project could promote a \textit{scale-free} cycle-friendly network, since we are more likely to add edges to vertices which already have a high number of connections. 
 
 Zargham et al.~\cite{zarghami2020} used spanning trees to quantify network reliability, another measure that may be of relevance to cyclists so that they can be confident of an alternative route should there be any roadworks. They demonstrate an exact measurement of network reliability by looking at the set of all spanning trees in the graph and the probability of no failure for each spanning tree. This could be applied to road networks if we used historical data about roadworks along certain routes to estimate the probability of an edge being open.
 
-\subsection{Applications of Prim's Algorithm}
+\subsection{Applications of Prim's algorithm}
 There are many applications of Prim's algorithm. Wang et al.~\cite{wang2018} developed an algorithm based on Prim's algorithm and used it to identify natural disasters in isolated areas. Fitina et al.~\cite{fitina} discussed applying Prim's algorithm in the context of tourism in Papua New Guinea, in order to reduce the expense of travelling between the islands. Iqbal et al.~\cite{iqbal2017} used Prim's algorithm to optimize the planning of fibre optic cables to reduce the costs. We can see that Prim's algorithm is often used to find the most efficient overall routes, and we would like to improve these routes when building new cycling infrastructure. 
 
-\subsection{Software and Tools}
+\subsection{Software and tools}
 Below we discuss some libraries and tools that might be relevant to our project.
 
 \subsubsection*{Overpass API}
@@ -372,7 +373,7 @@ The model layer provides logical functions to process the data provided by the d
 \subsection{Graph layer}
 The graph layer constructs a \texttt{NetworkX} graph from nodes and edges provided by the model layer and performs analysis on it. It exposes methods to visualize and modify the graph, as well as to run various shortest path algorithms on the graph. If a framework other than \texttt{NetworkX} was preferred, all that would need to be replaced is the graph layer.
 
-\section{Data fetcher}
+\section{Data Fetcher}
 The data fetcher contains the OSM data. This includes all the OSM nodes and ways within the area to be analysed. It should provide access to the relevant information regarding a node or a way. For example, we can store a mapping from node IDs to node objects, and in other layers (model and graph) we can use the lightweight node IDs to represent vertices, and we only access the actual node object when needed. This provides a form of abstraction: the model layer and the graph layer do not need to know the implementation details of OSM nodes and ways; they only need access to some properties such as node positions and way tags, which are provided by the data fetcher.
 
 Ideally, the OSM data returned by any requests can be cached in the data fetcher so that we do not make a new query for every OSM node we are interested in. The data fetcher should also provide some basic error handling, such as when some data is missing.
@@ -656,7 +657,7 @@ As our system was implemented in a multi-layer architecture, we were able to tes
 
 The testing results are shown in Appendix~\ref{app:test}. In the following sections, we give an overview of how unit testing was carried out for each layer.
 
-\subsection{Data Fetcher}
+\subsection{Data fetcher}
 Most methods provided in the data fetcher are attribute getters, so unit tests were written to verify the correct attribute was returned by each method. We used mock OSM ways and nodes for testing so that we could set their attributes without the need to make a request to the Overpass API. In addition, the \texttt{patch} decorator was used to create a mock object of the Overpass API, so that the unit tests would not be dependent on the Overpass API server.
 
 \subsection{Model}
@@ -672,7 +673,7 @@ In this chapter, we reflect on the goals and objectives of this project. We will
 As discussed in the design and implementation chapters, the system is designed in such a way that the choice of which tags contribute to the cycle-friendly score are the responsibility of the user. A default configuration file (Appendix~\ref{app:config}) was created using the legend and documentation of CyclOSM~\cite{cycleOSM} as inspiration. CyclOSM uses OpenStreetMap data to highlight cycling infrastructure. Similarly to this project, it utilises the tags of ways, so it is a relatively complete reference for the most important tags to be considered. As mentioned in the context survey, one difficulty with OpenStreetMap is that since different groups of mappers have their own conventions, there are a wide variety of tag-value mappings that represent the same things. As a consequence, CyclOSM does not cover every relevant combination of tags. The extensible configuration means that a local town planner could adapt the system to suit the conventions of the local area.
 
 \section{Cycle-friendly Graph and CyclOSM}\label{sec:eval_osm}
-We compared the cycle-friendly graph which was generated by our system against CyclOSM~\cite{cycleOSM}. Figure~\ref{fig:cyclosm st andrews} shows the map of St Andrews in CyclOSM, and the map legend is shown in Figure~\ref{fig:cyclosm legend}. The cycle-friendly graph produced by our system using the default configuration is shown in Figure~\ref{fig:cycle friendly graph new}.
+We compared the cycle-friendly graph which was generated by our system against CyclOSM~\cite{cycleOSM}. Figure~\ref{fig:cyclosm st andrews} shows the map of St Andrews in CyclOSM, and the map legend is shown in Figure~\ref{fig:cyclosm legend}.
 
 \begin{figure}[ht!]
     \centering
@@ -714,7 +715,7 @@ We compared the cycle-friendly graph which was generated by our system against C
        \label{fig:cycle friendly graphs}
 \end{figure}
 
-An earlier produced graph is displayed in Figure~\ref{fig:cycle friendly graph old}. Upon a closer look at some of the paths we discovered an omission in the CyclOSM view. There are a few streets which have a cycle path where the value for the \texttt{cycleway} tag is \texttt{opposite}, however this value is not considered by CyclOSM. Therefore, this tag was added to the default configuration file, and the more complete cycle-friendly graph was produced (Figure~\ref{fig:cycle friendly graph new}).
+The cycle-friendly graph produced by our system using the default configuration is shown in Figure~\ref{fig:cycle friendly graph new}. An earlier produced graph is displayed in Figure~\ref{fig:cycle friendly graph old}. Upon a closer look at some of the paths we discovered an omission in the CyclOSM view. There are a few streets which have a cycle path where the value for the \texttt{cycleway} tag is \texttt{opposite}, however this value is not considered by CyclOSM. Therefore, this tag was added to the default configuration file, and the more complete cycle-friendly graph was produced in Figure~\ref{fig:cycle friendly graph new}.
 
 Figure~\ref{fig:overlay st andrews} shows the cycle-friendly graph overlaying the CyclOSM of St Andrews. We can see that ways with a separate cycle way and paths designated for bicycles are identified in our plot. On the other hand, the busy main roads such as \textit{North Street} and \textit{South Street} do not appear, which is sensible as they are not very safe to cycle on. 
 
@@ -974,7 +975,7 @@ Overall, we can see that our system worked when applied to other areas. It creat
 
 The metric of average node connectivity does not scale well to larger or denser areas, even though it was provided by the NetworkX library. However, the average shortest path metric was calculable for all graphs and paths produced.
 
-\section{Success criteria}\label{sec:success}
+\section{Success Criteria}\label{sec:success}
 In Section~\ref{sec:aims}, We presented a list of aims and objectives. We will look at each of the objectives in turn to evaluate the success of this project.
 
 \subsection{Primary objectives}
@@ -986,7 +987,7 @@ In Section~\ref{sec:aims}, We presented a list of aims and objectives. We will l
     A heuristic function was given in Section~\ref{sec:cycle_heuristic}, where the weightings and scores can be configured in \texttt{configuration.json}. In addition, the threshold score for which a way is considered to be cycle-friendly is configurable. We discussed system configuration in Section~\ref{sec:config}.
 
     \item \textit{Apply the heuristics to highlight disconnected components in the cycle-friendly subgraph} - \textbf{fully complete}\\[1mm]
-    We applied the heuristics to St Andrews and identified the components in the cycle-friendly graph, as discussed in Section~\ref{sec:components}.
+    We applied the heuristics to St Andrews and identified the components in the cycle-friendly graph, as discussed in Section~\ref{sec:components}. Our strategies aim to find a path that connects the two largest components, whereas an alternative approach would be to consider other pair of components, or even more than two components.
 
     \item \textit{Consider other properties of the graph, such as k-connectivity and induced subgraphs, to produce other findings relevant to cycling} - \textbf{fully complete}\\[1mm]
     We discussed our findings relevant to connectivity in Section~\ref{sec:connectivity}. We studied the average node connectivity of the graph and the average cost of the shortest paths, and made a comparison before and after we added the suggested path to the cycle-friendly graph. We did not consider the induced subgraphs from the set of nodes, as the nature of the problem was to find cycle-friendly edges; it does not make much sense to consider nodes being cycle-friendly or not. However, we did construct subgraphs from a set of edges determined by our heuristic function.
