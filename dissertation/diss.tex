@@ -54,7 +54,7 @@ This project aims to build an automated process to analyse the cycling infrastru
 \chapter*{Declaration}
 I declare that the material submitted for assessment is my own work except where credit is explicitly given to others by citation or acknowledgement. This work was performed during the current academic year except where otherwise stated.
 
-The main text of this project report is 10,584 words long, including project specification and plan.
+The main text of this project report is 10,508 words long, including project specification and plan.
 
 In submitting this project report to the University of St Andrews, I give permission for it to be made available for use in accordance with the regulations of the University Library. I also give permission for the title and abstract to be published and for copies of the report to be made and supplied at cost to any bona fide library or research worker, and to be made available on the World Wide Web. I retain the copyright in this work.
 
@@ -553,7 +553,7 @@ Two graph libraries, \texttt{NetworkX} and \texttt{python-igraph}, were experime
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.7\textwidth,trim={2.5cm 1.5cm 1.7cm 1.7cm},clip]{diss_images/impl/networkx.png}
+    \includesvg[width=0.8\textwidth]{diss_images/impl/networkx.svg}
     \caption{A plot of St Andrews produced by \texttt{NetworkX}}
     \label{fig:networkx}
 \end{figure}
@@ -563,7 +563,9 @@ We obtained nodes and edges from the OSM data in the model layer, and we would l
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.7\textwidth]{diss_images/impl/graph_layout.png}
+    \adjustbox{trim=2cm 1.2cm 2cm 1.5cm, clip} {
+        \includesvg[width=\textwidth]{diss_images/impl/graph_layout.svg}
+    }
     \caption{The cycle-friendly graph overlaying the OpenStreetMap}
     \label{fig:graph layout}
 \end{figure}
@@ -573,16 +575,20 @@ A closer look at the constructed graph reveals a problem. Figure~\ref{fig:close 
 
 \begin{figure}[ht]
     \centering
-    \begin{subfigure}[ht]{0.45\textwidth}
+    \begin{subfigure}[ht]{\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{diss_images/impl/close_before.png}
+        \adjustbox{trim=5cm 4cm 3cm 2cm, clip} {
+            \includesvg[width=\textwidth]{diss_images/impl/close_before.svg}
+        }
         \caption{Before adding geometric edges}
         \label{fig:close before}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[ht]{0.45\textwidth}
+    \begin{subfigure}[ht]{\textwidth}
         \centering
-        \includegraphics[width=\textwidth]{diss_images/impl/close_after.png}
+        \adjustbox{trim=5cm 4cm 3cm 2cm, clip} {
+            \includesvg[width=\textwidth]{diss_images/impl/close_after.svg}
+        }
         \caption{After adding geometric edges}
         \label{fig:close after}
     \end{subfigure}
@@ -615,8 +621,8 @@ Another approach we considered was to measure the geographical area enclosed by 
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.8\textwidth,trim={2.5cm 1.5cm 1.7cm 1.7cm},clip]{diss_images/impl/components.png}
-    \caption{Connected components in the cycle-friendly graph}
+    \includesvg[width=0.8\textwidth]{diss_images/impl/components.svg}
+    \caption{Connected components in the cycle-friendly graph of St Andrews}
     \label{fig:component}
 \end{figure}
 
