@@ -29,13 +29,6 @@
 			"west": 5.1310,
 			"north": 52.0428,
 			"east": 5.1877
-		},
-		"Cambridge": {
-			"nodeId": 20971094,
-			"south": 52.1781,
-			"west": 0.0718,
-			"north": 52.2398,
-			"east": 0.1799
 		}
 	},
 	"weightedTags": {
