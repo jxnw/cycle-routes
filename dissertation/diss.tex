@@ -4,6 +4,7 @@
 \usepackage{pdfpages}
 \usepackage{amsmath}
 \usepackage{url}
+\usepackage[hidelinks]{hyperref}
 \usepackage{caption}
 \usepackage{subcaption}
 \usepackage[inkscapeformat=png]{svg}
@@ -88,7 +89,7 @@ The primary objectives are listed below:
     \item Develop an automated process that turns the OpenStreetMap data for an area into a graph annotated with data relevant to cycle accessibility and apply this to St Andrews
     \item Develop a set of configurable heuristics to determine whether a route is cycle friendly
     \item Apply the heuristics to highlight disconnected components in the cycle-friendly subgraph
-    \item Consider other properties of the graph, such as k-connectivity and induced subgraphs, to produce other findings relevant to cycling
+    \item Consider other properties of the graph, such as $k$-connectivity and induced subgraphs, to produce other findings relevant to cycling
     \item Suggest the most efficient paths to add to increase the connectedness of the subgraph
 \end{enumerate}
 
@@ -227,8 +228,11 @@ Another famous graph algorithm is Prim's algorithm, which finds the minimum span
 \label{fig:mst_example}
 \end{figure}
 
-\section{Related Work} \label{sec:related_work}
-\subsection{OpenStreetMap}
+\section{Related Work}\label{sec:related_work}
+In this section, we will study the map data that we plan to work with and give an overview of some related work in graph theory.
+
+
+\subsection{OpenStreetMap}\label{sec:openstreetmap}
 OpenStreetMap~\cite{OpenStreetMap} is an open, user-generated map database. It is licensed under the Open Data Commons Open Database Licence~\cite{odbl}. There are four types of data in OSM~\cite{9119753}:
 \begin{itemize}
     \item A node, which is a location on the Earth's surface with longitude and latitude
@@ -253,7 +257,7 @@ OpenStreetMap~\cite{OpenStreetMap} is an open, user-generated map database. It i
 
 Figure~\ref{fig:osm_sta} shows the map of St Andrews in CyclOSM~\cite{cycleOSM}, a bicycle map based on OpenStreetMap. It highlights bicycle infrastructure such as cycleways, and it includes information about highways such as speed limits. Ferster et al. \cite{doi:10.1080/15568318.2018.1519746} compared OSM data against municipal open data in six Canadian cities and concluded that OSM data was more extensive and detailed.
 
-There are other maps that can be used to show bike lanes. For example, Google Maps (\url{https://www.google.com/maps}) is a widely used map. More than 1 billion people use it every month~\cite{ethan2019}, and by 2018 it supported 40 languages~\cite{yamagami2018}. It makes use of machine learning techniques to remove fake content and help keep the map accurate~\cite{gupta2023}. It also provides a good user interface. Figure~\ref{fig:google_sta} shows the map of St Andrews in Google Maps in the cycling layer. One advantage that google have over OpenStreetMap is that the map data is not all contributed by volunteers, so it is much easier for them to keep their data consistent.
+There are other maps that can be used to show bike lanes. For example, Google Maps (\url{https://www.google.com/maps}) is a widely used map. More than 1 billion people use it every month~\cite{ethan2019}, and by 2018 it supported 40 languages~\cite{yamagami2018}. It makes use of machine learning techniques to remove fake content and help keep the map accurate~\cite{gupta2023}. It also provides a good user interface. Figure~\ref{fig:google_sta} shows the map of St Andrews in Google Maps in the cycling layer. One advantage that Google Maps have over OpenStreetMap is that the map data is not all contributed by volunteers, so it is much easier for them to keep their data consistent. On the other hand, OpenStreetMap suffers from a lack of a unified data schema. For example, the \texttt{maxspeed} tag can take values in various format which may or may not have units, and the units are not standardised~\cite{wiki:maxspeed}.
 
 \begin{figure}[ht!]
     \centering
@@ -335,7 +339,7 @@ Zargham et al.~\cite{zarghami2020} used spanning trees to quantify network relia
 There are many applications of Prim's algorithm. Wang et al.~\cite{wang2018} developed an algorithm based on Prim's algorithm and used it to identify natural disasters in isolated areas. Fitina et al.~\cite{fitina} discussed applying Prim's algorithm in the context of tourism in Papua New Guinea, in order to reduce the expense of travelling between the islands. Iqbal et al.~\cite{iqbal2017} used Prim's algorithm to optimize the planning of fibre optic cables to reduce the costs. We can see that Prim's algorithm is often used to find the most efficient overall routes, and we would like to improve these routes when building new cycling infrastructure. 
 
 \subsection{Software and tools}
-Below we discuss some libraries and tools that might be relevant to our project.
+Below we discuss some libraries and tools that are relevant to our project.
 
 \subsubsection*{Overpass API}
 \texttt{overpy}~\cite{overpy} is a python wrapper to access the Overpass API. It supports querying with Overpass QL as well as parsing the response data to objects such as nodes and ways. 
@@ -462,7 +466,7 @@ Tags which do not appear in the configuration file are considered unimportant an
 The heuristic function assigns a cycle-friendly score to each OSM way, and we would like to make the binary decision of whether a way should be classified as cycle-friendly based on its score. We could define a threshold in the configuration file, and consider a way to be cycle-friendly only if it gives a score higher than the threshold. The choice of the threshold value is important. If it is set too high, not many ways will be selected; if it is set too low, not much filtering will happen and the resulting graph will not give much useful information.
 
 \subsection{Strategies}
-User should be able to specify which strategies they prefer to use, as discussed in Section~\ref{sec:strategies}. The default is to run all strategies on the graph.
+User should be able to specify which strategies they prefer to use, as discussed in Section~\ref{sec:strategies}. The default option is to produce four suggestions using each of the strategy.
 
 \chapter{Implementation}\label{chapter:impl}
 This chapter focuses on the implementation of our system. Sections~\ref{sec:data fetcher impl}, \ref{sec:model impl} and \ref{sec:graph impl} outline the implementation of each layer. Section~\ref{sec:client} discusses the terminal client for the system. Testing was carried out and explained in Section~\ref{sec:testing}.
@@ -676,7 +680,7 @@ In the graph layer, most of the code were written to display a plot or were dire
 In this chapter, we reflect on the goals and objectives of this project. We will look at the plots generated by our system and discuss the effectiveness of the suggested paths.
 
 \section{Configuration}
-As discussed in the design and implementation chapters, the system is designed in such a way that the choice of which tags contribute to the cycle-friendly score are the responsibility of the user. A default configuration file (Appendix~\ref{app:config}) was created using the legend and documentation of CyclOSM~\cite{cycleOSM} as inspiration. CyclOSM uses OpenStreetMap data to highlight cycling infrastructure. Similarly to this project, it utilises the tags of ways, so it is a relatively complete reference for the most important tags to be considered. As mentioned in the context survey, one difficulty with OpenStreetMap is that since different groups of mappers have their own conventions, there are a wide variety of tag-value mappings that represent the same things. As a consequence, CyclOSM does not cover every relevant combination of tags. The extensible configuration means that a local town planner could adapt the system to suit the conventions of the local area.
+As discussed in the design and implementation chapters, the system is designed in such a way that the choice of which tags contribute to the cycle-friendly score are the responsibility of the user. A default configuration file (Appendix~\ref{app:config}) was created using the legend and documentation of CyclOSM~\cite{cycleOSM} as inspiration. CyclOSM uses OpenStreetMap data to highlight cycling infrastructure. Similarly to this project, it utilises the tags of ways, so it is a relatively complete reference for the most important tags to be considered. As mentioned in the context survey (Section~\ref{sec:openstreetmap}), one difficulty with OpenStreetMap is that since different groups of mappers have their own conventions, there are a wide variety of tag-value mappings that represent the same things. As a consequence, CyclOSM does not cover every relevant combination of tags. The extensible configuration means that a local town planner could adapt the system to suit the conventions of the local area.
 
 \section{Cycle-friendly Graph and CyclOSM}\label{sec:eval_osm}
 We compared the cycle-friendly graph which was generated by our system against CyclOSM~\cite{cycleOSM}. Figure~\ref{fig:cyclosm st andrews} shows the map of St Andrews in CyclOSM, and the map legend is shown in Figure~\ref{fig:cyclosm legend}.
@@ -783,9 +787,9 @@ The cycle path additions suggested by our system are highlighted in yellow in Fi
 \end{figure}
 
 \subsection{Graph metrics}\label{sec:metrics}
-As mentioned in the context survey, a common metric of connectedness of a graph is \textit{k-connectivity}. This specifies the minimum number of edges or nodes that could be removed in order for a graph to no longer be connected. The higher the k-connectivity, the more connected the graph is. The connectivity of the original graph of St Andrews is 1, before we do the cycle-friendly processing. This is likely because there are some nodes in dead ends where there is only one route to access them, so removing that one edge will make the graph not connected. Once we apply the cycle-friendly heuristic, the connectivity of the graph becomes 0, because the cycle-friendly graph is not connected and has many components. This suggests that k-connectivity may not be the best measure of connectedness of the cycle-friendly graph.
+As mentioned in the context survey, a common metric of connectedness of a graph is \textit{k-connectivity}. This specifies the minimum number of edges or nodes that could be removed in order for a graph to no longer be connected. The higher the $k$-connectivity, the more connected the graph is. The connectivity of the original graph of St Andrews is 1, before we do the cycle-friendly processing. This is likely because there are some nodes in dead ends where there is only one route to access them, so removing that one edge will make the graph not connected. Once we apply the cycle-friendly heuristic, the connectivity of the graph becomes 0, because the cycle-friendly graph is not connected and has many components. This suggests that $k$-connectivity may not be the best measure of connectedness of the cycle-friendly graph.
 
-A related measure is called \textit{average node connectivity}. This may be a better metric than k-connectivity because it is not as affected by individual cases and works even when the graph is not completely connected. We consider, for each pair of nodes, the minimum number of edges that could be removed in order for the nodes to not have a connecting path. We then take the average node connectivity to be the mean value of this metric. It is infeasible to run this algorithm on the original graph because there are too many nodes and the algorithm scales quadratically. However, it is feasible to run this on the cycle-friendly graph.
+A related measure is called \textit{average node connectivity}. This may be a better metric than $k$-connectivity because it is not as affected by individual cases and works even when the graph is not completely connected. We consider, for each pair of nodes, the minimum number of edges that could be removed in order for the nodes to not have a connecting path. We then take the average node connectivity to be the mean value of this metric. It is infeasible to run this algorithm on the original graph because there are too many nodes and the algorithm scales quadratically. However, it is feasible to run this on the cycle-friendly graph.
 
 The average node connectivity of the cycle-friendly graph was 0.947, before we add any new paths to it. This is less than one because, if nodes are in different components, no edges need to be removed to make them disconnected, as they are already disconnected. After connecting the two largest components using any of the four strategies, the average node connectivity increased to 0.999. The same value was given by each strategy, because we were only adding one path to connect the same components. It would be interesting to see if we would see greater improvements in average node connectivity when we added a new region, or if it is better to improve connections within the largest cycle-friendly region. This will likely depend on the characteristics of the graph concerned, so it may vary by each geographical area's cycling infrastructure.
 
@@ -794,7 +798,7 @@ The average node connectivity of the cycle-friendly graph was 0.947, before we a
     \centering
     \begin{tabular}{|c|c|}
         \hline
-        Graph & Average shortest path length \\
+        Graph & Average shortest path length (km) \\
         \hline
         Unmodified & 4.156 \\
         Strategy A & 3.744 \\
@@ -812,7 +816,7 @@ Another useful graph metric is the \textit{average shortest path length} of a gr
 Since strategy A and D produced the same path, the values for these two strategies are in the same. We can see that strategy C made the biggest difference to average path length, which makes sense because improving the connectivity of the most central node in a region should make a bigger effect on the majority of nodes than improving the connectivity of a node on the outskirts, which is what strategy A did.
 
 \section{Application to Other Areas}
-In order to evaluate the scalability of our approach, we have applied the automated process to two other cities: Dundee in Scotland and Houten in the Netherlands. Dundee was chosen because it is nearby St Andrews, and it is much larger than St Andrews, so we might get multiple similarly sized regions rather than one big component. Houten was chosen because it is of a similar size to St Andrews, but has grown much in recent decades. It has been the subject of urban planning designed to promote bicycle usage over driving.
+In order to evaluate the scalability of our approach, we have applied the automated process to two other cities: Dundee in Scotland and Houten in the Netherlands. Dundee was chosen because it is nearby St Andrews, and it is much larger than St Andrews, so we might get multiple similarly sized regions rather than one big component. Houten was chosen because it has been the subject of urban planning designed to promote bicycle usage over driving.
 
 \subsection{Dundee}\label{sec:dundee}
 We can see in Figure~\ref{fig:components dundee} that Dundee has many more disconnected components than St Andrews did, and the distribution of the size is much more even. Figure~\ref{fig:overlay dundee} shows the cycle-friendly map overlaying the CyclOSM of Dundee. We can see that there are cycle-friendly clusters around the centres of activity in the city, such as Ninewells Hospital (southwest of the map), the city centre and waterfront (by the river), and the Hilltown (roughly in the centre of the map).
@@ -881,7 +885,7 @@ Since Dundee is much bigger, it was computationally infeasible to run the averag
     \centering
     \begin{tabular}{|c|c|}
         \hline
-        Graph & Average shortest path length \\
+        Graph & Average shortest path length (km) \\
         \hline
         Unmodified & 9.485 \\
         Strategy A & 9.360 \\
@@ -961,7 +965,7 @@ The suggested paths for Houten are shown in Figure~\ref{fig:path houten}. Since 
     \centering
     \begin{tabular}{|c|c|}
         \hline
-        Graph & Average shortest path length \\
+        Graph & Average shortest path length (km) \\
         \hline
         Unmodified & 1.493 \\
         Strategy A & 1.452 \\
@@ -982,7 +986,7 @@ Overall, we can see that our system worked when applied to other areas. It creat
 The metric of average node connectivity does not scale well to larger or denser areas, even though it was provided by the NetworkX library. However, the average shortest path metric was calculable for all graphs and paths produced.
 
 \section{Success Criteria}\label{sec:success}
-In Section~\ref{sec:aims}, We presented a list of aims and objectives. We will look at each of the objectives in turn to evaluate the success of this project.
+In Section~\ref{sec:aims}, we presented a list of aims and objectives. We will look at each of the objectives in turn to evaluate the success of this project.
 
 \subsection{Primary objectives}
 \begin{enumerate}
@@ -1020,7 +1024,7 @@ This project fulfilled all the primary and secondary objectives, as demonstrated
 \section{Limitations}
 There are a few limitations with the approach taken in this project. Firstly, the output can only be as good as the input. Since it is largely a volunteer project, OpenStreetMap data is not very carefully curated, and the conventions used to assign tags to ways are not very standardised. We noticed one obvious case where CyclOSM is not considering all the relevant tags, and there are likely other tags that we failed to consider as well. The flexible configuration means that it will be straightforward to add any missed features. Additionally, there are many connections of nearby roads in real life that are not reflected in OpenStreetMap. In this project we mitigated for these issues by considering geographical proximity, but this does not account for situations such as streets on different levels in a hilly area, where nearby streets may not actually be connected. It would be ideal if the connections in OSM were more accurate, so that there was less uncertainty around whether these connections exist. Furthermore, OSM data is not always up-to-date with the latest infrastructure changes.
 
-Secondly, we did not consider elevation at all when considering the edge costs. For cyclists, a longer route that is flat may be preferable to a shorter route with many changes in elevation. This is one of the reasons that Dundee City Council are proposing extending the cycle paths along Perth Road, whereas our system suggested a more direct path through the Balgay Hill area. The elevation is not associated with OSM ways, so it was not possible to consider that in this project.
+Secondly, we did not consider elevation at all when considering the edge costs. For cyclists, a longer route that is flat may be preferable to a shorter route with many changes in elevation. This is one of the reasons that Dundee City Council~\cite{robertson:dundee} are proposing extending the cycle paths along Perth Road, whereas our system suggested a more direct path through the Balgay Hill area. The elevation is not associated with OSM ways, so it was not possible to consider that in this project.
 
 Thirdly, we assumed that each street was bidirectional. While it is less troublesome for cyclists to travel in both directions on a one way street than it is for cars, there will be some situations where cyclists will only be able to go in one direction. The possible values for the \texttt{cycleway} tag do include this information, so it would be possible to incorporate this into our findings. However, it would complicate the graph algorithms for not much gain in performance, so it was decided to not go down this road.
 
@@ -1039,7 +1043,9 @@ The system may be refined and improved in the following directions.
 \bibliography{diss_refs}
 
 \appendix
-\chapter{Testing summary}\label{app:test}
+% \chapter{README}\label{app:readme}
+
+\chapter{Testing Summary}\label{app:test}
 \section*{Test coverage}
 \begin{lstlisting}
 Name                         Stmts   Miss  Cover
@@ -1100,7 +1106,7 @@ Ran 32 tests in 0.176s
 OK
 \end{lstlisting}
 
-\chapter{Default configuration}\label{app:config}
+\chapter{Default Configuration}\label{app:config}
 \begin{lstlisting}
 {
 	"area": "StAndrews",
