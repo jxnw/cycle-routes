@@ -1,0 +1,65 @@
+\hypertarget{cycle-routes-connecting-the-network}{%
+\section*{Cycle routes: connecting the
+network}\label{cycle-routes-connecting-the-network}}
+\addcontentsline{toc}{section}{Cycle routes: connecting the network}
+
+Dissertation project for MSc Computer Science at the University of St
+Andrews
+
+\hypertarget{installation}{%
+\subsection*{Installation}\label{installation}}
+\addcontentsline{toc}{subsection}{Installation}
+
+Run the \texttt{install.sh} script to create a Python virtual
+environment for this project.
+
+\hypertarget{usage}{%
+\subsection*{Usage}\label{usage}}
+\addcontentsline{toc}{subsection}{Usage}
+
+To run the program, first activate the virtual environment:
+
+\begin{verbatim}
+source env/bin/activate
+\end{verbatim}
+
+To run the program with the default configuration in
+\texttt{configuration.json}:
+
+\begin{verbatim}
+python main.py
+\end{verbatim}
+
+Alternatively, the configuration file can be passed as an argument:
+
+\begin{verbatim}
+python main.py --config path_to_config_file
+\end{verbatim}
+
+To specify the directory to save the generated plot:
+
+\begin{verbatim}
+python main.py --save path_to_plots
+\end{verbatim}
+
+\hypertarget{testing}{%
+\subsection*{Testing}\label{testing}}
+\addcontentsline{toc}{subsection}{Testing}
+
+To run all unit tests:
+
+\begin{verbatim}
+python -m unittest -v
+\end{verbatim}
+
+To run all unit tests with code coverage:
+
+\begin{verbatim}
+coverage run -m unittest
+\end{verbatim}
+
+To view the coverage report:
+
+\begin{verbatim}
+coverage report -m
+\end{verbatim}

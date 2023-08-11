@@ -8,6 +8,7 @@
 \usepackage{caption}
 \usepackage{subcaption}
 \usepackage[inkscapeformat=png]{svg}
+\usepackage{fancyvrb}
 \usepackage{adjustbox}
 \usepackage{algorithm}  % algorithm
 \usepackage{algpseudocode}  % algorithm
@@ -25,6 +26,12 @@ breaklines=true
 
 \usepackage{graphicx}
 \graphicspath{ {./diss_images/} }
+
+\newenvironment{markdown}%
+    {\VerbatimEnvironment\begin{VerbatimOut}{tmp.markdown}}%
+    {\end{VerbatimOut}%
+        \immediate\write18{pandoc tmp.markdown -t latex -o tmp.tex}%
+        \input{tmp.tex}}
 
 \begin{document}
 
@@ -148,7 +155,7 @@ Street maps can be considered as a type of hypergraph, where locations on the ma
 
 In a street map we do know the order of the nodes along the hyperedges, since each way consists of an ordered list of nodes. Therefore, we can create a graph from the street map hypergraph, and analyse the subgraph which only consists of cycle-friendly routes. We can then identify isolated areas in this subgraph, where there are no connecting edges between the isolated area and other parts of the graph. In the following sections, we present some graph algorithms which can be useful in our task.
 
-\subsection{Connectivity}
+\subsection{Connectivity}\label{sec:context connectivity}
 The \textit{vertex-connectivity} of a graph is defined as the minimum number of vertices that need to be removed to result in a disconnected graph, and the \textit{edge-connectivity} of a graph is the minimum number of edges that need to be removed to result in a disconnected graph~\cite{buckley1990distance}. A graph is \textit{k-vertex-connected} if it has vertex-connectivity $k$.
 
 \begin{figure}[ht]
@@ -655,7 +662,7 @@ A script called \texttt{main.py} was written to provide an entry point to the sy
     \item \texttt{--save}, which specifies the directory to save the generated graphs
 \end{itemize}
 
-A default configuration file was provided in Appendix~\ref{app:config}, but a user-defined configuration file can be passed to the system. This allows users to run the system on multiple configurations and compare the results easily, without the need to modify a single configuration file repeatedly. Users can also specify where to save the generated plots.
+The full running instructions are included in Appendix~\ref{app:readme}. A default configuration file is provided in Appendix~\ref{app:config}, but a user-defined configuration file can be passed to the system. This allows users to run the system on multiple configurations and compare the results easily, without the need to modify a single configuration file repeatedly. Users can also specify where to save the generated plots.
 
 \section{Testing Approach}\label{sec:testing}
 As our system was implemented in a multi-layer architecture, we were able to test each layer independently. The following python libraries were used for testing:
@@ -665,7 +672,7 @@ As our system was implemented in a multi-layer architecture, we were able to tes
     \item \texttt{coverage}~\cite{coverage}, which is a tool for measuring test coverage
 \end{itemize}
 
-The testing results are shown in Appendix~\ref{app:test}. In the following sections, we give an overview of how unit testing was carried out for each layer.
+The instructions for running the tests are specified in Appendix~\ref{app:readme}, and the testing results are shown in Appendix~\ref{app:test}. In the following sections, we give an overview of how unit testing was carried out for each layer.
 
 \subsection{Data fetcher}
 Most methods provided in the data fetcher are attribute getters, so unit tests were written to verify the correct attribute was returned by each method. We used mock OSM ways and nodes for testing so that we could set their attributes without the need to make a request to the Overpass API. In addition, the \texttt{patch} decorator was used to create a mock object of the Overpass API, so that the unit tests would not be dependent on the Overpass API server.
@@ -787,9 +794,24 @@ The cycle path additions suggested by our system are highlighted in yellow in Fi
 \end{figure}
 
 \subsection{Graph metrics}\label{sec:metrics}
-As mentioned in the context survey, a common metric of connectedness of a graph is \textit{k-connectivity}. This specifies the minimum number of edges or nodes that could be removed in order for a graph to no longer be connected. The higher the $k$-connectivity, the more connected the graph is. The connectivity of the original graph of St Andrews is 1, before we do the cycle-friendly processing. This is likely because there are some nodes in dead ends where there is only one route to access them, so removing that one edge will make the graph not connected. Once we apply the cycle-friendly heuristic, the connectivity of the graph becomes 0, because the cycle-friendly graph is not connected and has many components. This suggests that $k$-connectivity may not be the best measure of connectedness of the cycle-friendly graph.
+As mentioned in the context survey in Section~\ref{sec:context connectivity}, a common metric of connectedness of a graph is \textit{k-connectivity}. This specifies the minimum number of edges or nodes that could be removed in order for a graph to no longer be connected. The higher the $k$-connectivity, the more connected the graph is. The connectivity of the original graph of St Andrews is 1, before we do the cycle-friendly processing. This is likely because there are some nodes in dead ends where there is only one route to access them, so removing that one edge will make the graph not connected. Once we apply the cycle-friendly heuristic, the connectivity of the graph becomes 0, because the cycle-friendly graph is not connected and has many components. This suggests that $k$-connectivity may not be the best measure of connectedness of the cycle-friendly graph.
 
-A related measure is called \textit{average node connectivity}. This may be a better metric than $k$-connectivity because it is not as affected by individual cases and works even when the graph is not completely connected. We consider, for each pair of nodes, the minimum number of edges that could be removed in order for the nodes to not have a connecting path. We then take the average node connectivity to be the mean value of this metric. It is infeasible to run this algorithm on the original graph because there are too many nodes and the algorithm scales quadratically. However, it is feasible to run this on the cycle-friendly graph.
+A related measure is called \textit{average node connectivity}~\cite{BEINEKE200231}. This may be a better metric than $k$-connectivity because it is not as affected by individual cases and works even when the graph is not completely connected. We consider, for each pair of nodes, the minimum number of edges that could be removed in order for the nodes to not have a connecting path. We then take the average node connectivity to be the mean value of this metric. The formula to compute the average connectivity is defined in Equation~\ref{eq:avg}, where $\kappa_G(u, v)$ is maximum value of $k$ for which $u$ and $v$ are $k$-connected, and $p$ is the number of nodes in graph $G$.
+
+\begin{equation}\label{eq:avg}
+    \bar\kappa(G) = \frac{\sum_{u, v}\kappa_G(u, v)}{\binom{p}{2}}
+\end{equation}
+
+As an example, both graphs in Figure~\ref{fig:avg example} have connectivity 1, but the average connectivity of $G_1$ is lower than $G_2$, at 1 and 2.2 respectively. The higher average connectivity of $G_2$ reflects the greater reliability of this network.
+
+\begin{figure}[ht!]
+    \centering
+    \includegraphics[width=0.6\textwidth]{diss_images/eval/avg_example.png}
+    \caption{Two example graphs from Beineke et al.~\cite{BEINEKE200231}}
+    \label{fig:avg example}
+\end{figure}
+
+\texttt{NetworkX} provides an implementation for average node connectivity by computing the local node connectivity for every pair of nodes in the graph. The local node connectivity has complexity $O(\sqrt{n}m)$, where $n$ is the number of edges and $m$ is the number of vertices~\cite{brandes2005}. Since this was computed for every pair of nodes, the overall time complexity to compute average node connectivity is at least $O(\sqrt{n}m^3)$. It was infeasible to run this algorithm on the full graph of St Andrews because there are too many nodes. However, it was feasible to run this on the cycle-friendly graph. 
 
 The average node connectivity of the cycle-friendly graph was 0.947, before we add any new paths to it. This is less than one because, if nodes are in different components, no edges need to be removed to make them disconnected, as they are already disconnected. After connecting the two largest components using any of the four strategies, the average node connectivity increased to 0.999. The same value was given by each strategy, because we were only adding one path to connect the same components. It would be interesting to see if we would see greater improvements in average node connectivity when we added a new region, or if it is better to improve connections within the largest cycle-friendly region. This will likely depend on the characteristics of the graph concerned, so it may vary by each geographical area's cycling infrastructure.
 
@@ -1043,7 +1065,45 @@ The system may be refined and improved in the following directions.
 \bibliography{diss_refs}
 
 \appendix
-% \chapter{README}\label{app:readme}
+\chapter{README}\label{app:readme}
+\begin{markdown}
+# Cycle routes: connecting the network {-}
+Dissertation project for MSc Computer Science at the University of St Andrews
+
+## Installation {-}
+Run the `install.sh` script to create a Python virtual environment for this project.
+
+## Usage {-}
+To run the program, first activate the virtual environment:
+
+    source env/bin/activate
+
+To run the program with the default configuration in `configuration.json`:
+
+    python main.py
+
+Alternatively, the configuration file can be passed as an argument:
+
+    python main.py --config path_to_config_file
+
+To specify the directory to save the generated plot:
+
+    python main.py --save path_to_plots
+
+## Testing {-}
+To run all unit tests:
+
+    python -m unittest -v
+
+To run all unit tests with code coverage:
+
+    coverage run -m unittest
+
+To view the coverage report:
+
+    coverage report -m
+
+\end{markdown}
 
 \chapter{Testing Summary}\label{app:test}
 \section*{Test coverage}
