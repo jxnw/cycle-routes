@@ -10,7 +10,7 @@ To run the program, first activate the virtual environment:
 source env/bin/activate
 ```
 
-To run the program with the default configuration in `scripts/configuration.json`:
+To run the program with the default configuration in `configuration.json`:
 ```commandline
 python main.py
 ```
