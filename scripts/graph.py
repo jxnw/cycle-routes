@@ -91,7 +91,7 @@ class GraphProcessing:
                 shortest_path = path
         shortest_path_edges = [(shortest_path[i], shortest_path[i + 1]) for i in range(len(shortest_path) - 1)]
         path = self.trim_path(shortest_path_edges, from_region, to_region)
-        return self.get_path_length(path), path
+        return self.get_path_length(path, graph_unfiltered_copy), path
 
     def set_zero_cost(self, edge_length: Dict[Tuple[int, int], float]):
         for edge in edge_length.keys():
@@ -136,10 +136,15 @@ class GraphProcessing:
             plt.show()
 
     def connect_close_nodes(self):
-        new_edges = nx.geometric_edges(self.graph, radius=self.config.neighbour_eps)
-        self.graph.add_edges_from(new_edges, length=self.config.neighbour_eps)
-        new_edges = nx.geometric_edges(self.graph_unfiltered, radius=self.config.neighbour_eps)
-        self.graph_unfiltered.add_edges_from(new_edges, length=self.config.neighbour_eps)
+        new_edges_with_length = self.get_geometric_edges(self.graph)
+        self.graph.add_weighted_edges_from(new_edges_with_length, weight='length')
+        new_edges_with_length = self.get_geometric_edges(self.graph_unfiltered)
+        self.graph_unfiltered.add_weighted_edges_from(new_edges_with_length, weight='length')
+
+    def get_geometric_edges(self, graph) -> List[Tuple[int, int, float]]:
+        new_edges = nx.geometric_edges(graph, radius=self.config.neighbour_eps)
+        new_edges_with_length = [(u, v, self.get_edge_length((u, v))) for (u, v) in new_edges]
+        return new_edges_with_length
 
     def group_size(self, group: Set[int]):
         subgraph = self.graph.subgraph(group)
@@ -148,16 +153,15 @@ class GraphProcessing:
             size += subgraph.get_edge_data(*edge)['length']
         return size
 
-    def get_geometric_edges(self, graph) -> List[Tuple[int, int]]:
-        return nx.geometric_edges(graph, radius=self.config.neighbour_eps)
-
     def get_edge_length(self, edge: Tuple[int, int]):
         return self.get_geodesic_distance(self.layout[edge[0]], self.layout[edge[1]])
 
-    def get_path_length(self, path: List[Tuple[int, int]]):
+    def get_path_length(self, path: List[Tuple[int, int]], graph=None):
+        if graph is None:
+            graph = self.graph_unfiltered
         length = 0
         for (u, v) in path:
-            length += self.graph_unfiltered.edges[u, v]['length']
+            length += graph.edges[u, v]['length']
         return length
 
     @staticmethod
