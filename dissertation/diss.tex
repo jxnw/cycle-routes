@@ -7,6 +7,7 @@
 \usepackage[hidelinks]{hyperref}
 \usepackage{caption}
 \usepackage{subcaption}
+\usepackage{makecell}
 \usepackage[inkscapeformat=png]{svg}
 \usepackage{fancyvrb}
 \usepackage{adjustbox}
@@ -813,29 +814,36 @@ As an example, both graphs in Figure~\ref{fig:avg example} have connectivity 1, 
 
 \texttt{NetworkX} provides an implementation for average node connectivity by computing the local node connectivity for every pair of nodes in the graph. The local node connectivity has complexity $O(\sqrt{n}m)$, where $n$ is the number of edges and $m$ is the number of vertices~\cite{brandes2005}. Since this was computed for every pair of nodes, the overall time complexity to compute average node connectivity is at least $O(\sqrt{n}m^3)$. It was infeasible to run this algorithm on the full graph of St Andrews because there are too many nodes. However, it was feasible to run this on the cycle-friendly graph. 
 
-The average node connectivity of the cycle-friendly graph was 0.947, before we add any new paths to it. This is less than one because, if nodes are in different components, no edges need to be removed to make them disconnected, as they are already disconnected. After connecting the two largest components using any of the four strategies, the average node connectivity increased to 0.999. The same value was given by each strategy, because we were only adding one path to connect the same components. It would be interesting to see if we would see greater improvements in average node connectivity when we added a new region, or if it is better to improve connections within the largest cycle-friendly region. This will likely depend on the characteristics of the graph concerned, so it may vary by each geographical area's cycling infrastructure.
+The average node connectivity of the cycle-friendly graph was 0.946, before we add any new paths to it. This is less than one because, if nodes are in different components, no edges need to be removed to make them disconnected, as they are already disconnected. After connecting the two largest components using any of the four strategies, the average node connectivity increased to 0.998. The same value was given by each strategy, because we were only adding one path to connect the same components. It would be interesting to see if we would see greater improvements in average node connectivity when we added a new region, or if it is better to improve connections within the largest cycle-friendly region. This will likely depend on the characteristics of the graph concerned, so it may vary by each geographical area's cycling infrastructure.
 
 % avg st andrews
 \begin{table}[ht]
     \centering
-    \begin{tabular}{|c|c|}
+    \begin{tabular}{|c|c|c|c|}
         \hline
-        Graph & Average shortest path length (km) \\
+        Graph & \makecell{Average \\shortest \\path length (km)} & \makecell{Percentage \\decrease \\w.r.t. unmodified \\graph} & \makecell{Length of \\suggested \\path (km)}\\ 
         \hline
-        Unmodified & 4.156 \\
-        Strategy A & 3.744 \\
-        Strategy B & 3.739 \\
-        Strategy C & 3.730 \\
-        Strategy D & 3.744 \\
+        Unmodified & 3.928 & N/A & N/A\\
+        Strategy A & 3.588 &  & 0.139\\
+        Strategy B & 3.587 &  & 0.221\\
+        Strategy C & 3.597 &  & 0.855\\
+        Strategy D & 3.587 &  & 0.107\\
         \hline
     \end{tabular}
     \caption{Comparison of average shortest path length - St Andrews}
     \label{tab:avg st andrews}
 \end{table}
 
-Another useful graph metric is the \textit{average shortest path length} of a graph. This calculates the shortest path between each pair of nodes, and takes the mean value of the distance of these paths. The smaller this number, the easier it would be to get from one place to another. The metric in its purest form does not directly apply to a disconnected graph, since not all pairs of nodes will have a path between them. To get around this, we assigned a high constant value to be the cost of commuting between two disconnected nodes. Table~\ref{tab:avg st andrews} shows the value of this metric for the unmodified cycle-friendly graph as well as for the graph modified by each of the strategies.
+Another useful graph metric is the \textit{average shortest path length} of a graph. This calculates the shortest path between each pair of nodes, and takes the mean value of the distance of these paths. The smaller this number, the easier it would be to get from one place to another. The metric in its purest form does not directly apply to a disconnected graph, since not all pairs of nodes will have a path between them. To get around this, we assigned a high constant value to be the cost of commuting between two disconnected nodes. 
 
-Since strategy A and D produced the same path, the values for these two strategies are in the same. We can see that strategy C made the biggest difference to average path length, which makes sense because improving the connectivity of the most central node in a region should make a bigger effect on the majority of nodes than improving the connectivity of a node on the outskirts, which is what strategy A did.
+After that, we used Dijkstra's shortest path algorithm to compute the shortest path lengths between all nodes in the cycle-friendly graph.
+
+To estimate the cost of implementing the suggestions of each strategy, we considered the length of the suggested path. Where a suggested path uses existing cycle-friendly routes, as is likely when strategy D is used, we consider the cost of utilising the existing routes to be zero, i.e. we only consider the length of new cycling infrastructure.
+
+Table~\ref{tab:avg st andrews} shows the value of this metric for the unmodified cycle-friendly graph as well as for the graph modified by each of the strategies. 
+
+% TODO: A and D does not produce the same path; note B value is actually slightly higher than D
+Since strategy A and D produced the same path, the values for these two strategies are the same. We can see that strategy C made the biggest difference to average path length, which makes sense because improving the connectivity of the most central node in a region should make a bigger effect on the majority of nodes than improving the connectivity of a node on the outskirts, which is what strategy A did. On the other hand, strategy C required the most cycling infrastructure to be built, 
 
 \section{Application to Other Areas}
 In order to evaluate the scalability of our approach, we have applied the automated process to two other cities: Dundee in Scotland and Houten in the Netherlands. Dundee was chosen because it is nearby St Andrews, and it is much larger than St Andrews, so we might get multiple similarly sized regions rather than one big component. Houten was chosen because it has been the subject of urban planning designed to promote bicycle usage over driving.
@@ -900,20 +908,20 @@ The suggested paths are shown in Figure~\ref{fig:path dundee}. Our system sugges
 \end{figure}
 
 \subsubsection*{Graph Metrics}
-Since Dundee is much bigger, it was computationally infeasible to run the average node connectivity algorithm on the produced graph. It was however possible to produce the average shortest path length metrics, as shown in Table~\ref{tab:avg dundee}.
+Since Dundee is much bigger, it was computationally infeasible to run the average node connectivity algorithm on the produced graph due to the computational complexity of the algorithm discussed in Section~\ref{sec:metrics}. It was however possible to produce the average shortest path length metrics, as shown in Table~\ref{tab:avg dundee}.
 
 % avg dundee
 \begin{table}[ht!]
     \centering
-    \begin{tabular}{|c|c|}
+    \begin{tabular}{|c|c|c|c|}
         \hline
-        Graph & Average shortest path length (km) \\
+        Graph & \makecell{Average \\shortest \\path length (km)} & \makecell{Percentage \\decrease \\w.r.t. unmodified \\graph} & \makecell{Length of \\suggested \\path (km)}\\
         \hline
-        Unmodified & 9.485 \\
-        Strategy A & 9.360 \\
-        Strategy B & 9.275 \\
-        Strategy C & 9.341 \\
-        Strategy D & 9.274 \\
+        Unmodified & 27.037 & N/A & N/A\\
+        Strategy A & 26.301 &  & 2.136\\
+        Strategy B & 26.272 & & 3.175\\
+        Strategy C & 26.280 & & 3.509\\
+        Strategy D & 26.207 & & 0.628\\
         \hline
     \end{tabular}
     \caption{Comparison of average shortest path length - Dundee}
@@ -985,21 +993,22 @@ The suggested paths for Houten are shown in Figure~\ref{fig:path houten}. Since 
 % avg houten
 \begin{table}[ht!]
     \centering
-    \begin{tabular}{|c|c|}
+    \begin{tabular}{|c|c|c|c|}
         \hline
-        Graph & Average shortest path length (km) \\
+        Graph & \makecell{Average \\shortest \\path length (km)} & \makecell{Percentage \\decrease \\w.r.t. unmodified \\graph} & \makecell{Length of \\suggested \\path (km)}\\
         \hline
-        Unmodified & 1.493 \\
-        Strategy A & 1.452 \\
-        Strategy B & 1.454 \\
-        Strategy C & 1.454 \\
-        Strategy D & 1.452 \\
+        Unmodified & 2.226 & N/A & N/A\\
+        Strategy A & 2.172 &  & 0.123\\
+        Strategy B & 2.171 &  & 1.553\\
+        Strategy C & 2.170 &  & 1.369\\
+        Strategy D & 2.172 &  & 0.123\\
         \hline
     \end{tabular}
     \caption{Comparison of average shortest path length - Houten}
     \label{tab:avg houten}
 \end{table}
 
+% TODO: D == A
 This time there was little variation in the scores. Strategies A and D suggested the same path, as did strategies B and C. Since Houten already has very good cycling infrastructure, there are not many places that can be connected better, and this reflected in the similar paths of each strategy.
 
 \subsection{Summary}
