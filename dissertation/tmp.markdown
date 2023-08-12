@@ -1,5 +1,5 @@
 # Cycle routes: connecting the network {.unlisted .unnumbered}
-Dissertation project for MSc Computer Science at the University of St Andrews
+Dissertation project for M.Sc. Computer Science at the University of St Andrews
 
 ## Installation {.unlisted .unnumbered}
 Run the `install.sh` script to create a Python virtual environment for this project.
