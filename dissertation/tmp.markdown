@@ -1,10 +1,10 @@
-# Cycle routes: connecting the network {-}
+# Cycle routes: connecting the network {.unlisted .unnumbered}
 Dissertation project for MSc Computer Science at the University of St Andrews
 
-## Installation {-}
+## Installation {.unlisted .unnumbered}
 Run the `install.sh` script to create a Python virtual environment for this project.
 
-## Usage {-}
+## Usage {.unlisted .unnumbered}
 To run the program, first activate the virtual environment:
 
     source env/bin/activate
@@ -21,7 +21,7 @@ To specify the directory to save the generated plot:
 
     python main.py --save path_to_plots
 
-## Testing {-}
+## Testing {.unlisted .unnumbered}
 To run all unit tests:
 
     python -m unittest -v
